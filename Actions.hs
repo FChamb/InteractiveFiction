@@ -21,11 +21,13 @@ actions "open"    = Just open
 actions _         = Nothing
 -}
 
+{-
 action :: String -> String -> Maybe Command
 action "go" "north" = Just (Go North)
 action "go" "east" = Just (Go East)
 action "go" "west" = Just (Go West)
 action "go south" = Just (Go South)
+-}
 
 --completeAction :: GameData -> Command -> (GameData, String)
 --completeAction :: 
@@ -48,12 +50,13 @@ Nothing
 -}
 
 move :: String -> Room -> Maybe String
-move dir rm = undefined
+move dir rm = if (result == []) then Nothing else Just (room (head result))
+     where result = filter (\x -> dir == exit_dir x) (exits rm)
 
 {- Return True if the object appears in the room. -}
 
 objectHere :: String -> Room -> Bool
-objectHere o rm = undefined
+objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
 
 {- Given an object id and a room description, return a new room description
    without that object -}

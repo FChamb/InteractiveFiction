@@ -9,7 +9,6 @@ data Command = Go Direction   | Get Object   |
                Open
    deriving Show
 
-{-
 actions :: String -> Maybe Action
 actions "go"      = Just go
 actions "get"     = Just get
@@ -19,7 +18,6 @@ actions "examine" = Just examine
 actions "drink"   = Just drink
 actions "open"    = Just open
 actions _         = Nothing
--}
 
 {-
 action :: String -> String -> Maybe Command
@@ -62,13 +60,13 @@ objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
    without that object -}
 
 removeObject :: String -> Room -> Room
-removeObject o rm = undefined
+removeObject o rm = rm { objects = filter (\x -> (obj_name x /= o)) (objects rm)}
 
 {- Given an object and a room description, return a new room description
    with that object added -}
 
 addObject :: Object -> Room -> Room
-addObject o rm = undefined
+addObject o rm = rm { objects = (objects rm) ++ [o]}
 
 {- Given an object id and a list of objects, return the object data. Note
    that you can assume the object is in the list (i.e. that you have

@@ -149,7 +149,12 @@ put obj state = undefined
    inventory! -}
 
 examine :: Action
-examine obj state = undefined
+examine obj gd = 
+   do
+      objectFull = checkForObj obj gd
+      if objectFull then 
+         putStrLn "Object: " ++ (obj_name objFull) ++ "\nDescription: " ++ (obj_desc objFull)
+      else do putStrLn "No " ++ obj ++ " found."
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
@@ -157,7 +162,10 @@ examine obj state = undefined
 -}
 
 pour :: Action
-pour obj state = undefined
+pour obj state =
+   if carrying state mug && carrying state coffeepot then
+      do 
+         state {poured -> True}
 
 {- Drink the coffee. This should only work if the player has a full coffee 
    mug! Doing this is required to be allowed to open the door. Once it is
@@ -191,4 +199,10 @@ inv state = (state, showInv (inventory state))
 
 quit :: Command
 quit state = (state { finished = True }, "Bye bye")
+
+checkForObj :: String -> GameData -> Object
+checkForObj obj state = 
+   | carrying state obj = findObj obj (inventory state)
+   | objectHere obj (location_id state) = objectData obj (location_id state)
+   | otherwise = Nothing
 

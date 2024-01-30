@@ -45,7 +45,7 @@ instance Show GameData where
 type Action  = String -> GameData -> (GameData, String)
 
 -- Things which just update the game state
-type Rule = GameData -> (GameData, String)
+type Command = GameData -> (GameData, String)
 
 -- Things which define directions
 data Direction = North | East | West | South | Out | In

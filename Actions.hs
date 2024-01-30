@@ -1,13 +1,15 @@
 module Actions where
 
 import World
-import Parsing
+--import Parsing
 
+{-
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
                Open
    deriving Show
+-}
 
 actions :: String -> Maybe Action
 actions "go"      = Just go
@@ -30,10 +32,10 @@ action "go south" = Just (Go South)
 --completeAction :: GameData -> Command -> (GameData, String)
 --completeAction :: 
 
-rule :: String -> Maybe Rule
-rule "quit"      = Just quit
-rule "inventory" = Just inv
-rule _           = Nothing
+commands :: String -> Maybe Command
+commands "quit"      = Just quit
+commands "inventory" = Just inv
+commands _           = Nothing
 
 {- Given a direction and a room to move from, return the room id in
    that direction, if it exists.
@@ -180,13 +182,13 @@ open obj state = undefined
 
 {- Don't update the game state, just list what the player is carrying -}
 
-inv :: Rule
+inv :: Command
 inv state = (state, showInv (inventory state))
    where showInv [] = "You aren't carrying anything"
          showInv xs = "You are carrying:\n" ++ showInv' xs
          showInv' [x] = obj_longname x
          showInv' (x:xs) = obj_longname x ++ "\n" ++ showInv' xs
 
-quit :: Rule
+quit :: Command
 quit state = (state { finished = True }, "Bye bye")
 

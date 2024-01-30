@@ -2,6 +2,7 @@ module Actions where
 
 import World
 import Parsing
+import Data.Maybe
 
 {-
 data Command = Go Direction   | Get Object   |
@@ -162,10 +163,9 @@ put obj state = undefined
 examine :: Action
 examine obj gd = 
    do
-      objectFull = checkForObj obj gd
-      if objectFull then 
-         putStrLn "Object: " ++ (obj_name objFull) ++ "\nDescription: " ++ (obj_desc objFull)
-      else do putStrLn "No " ++ obj ++ " found."
+      let objectFull = checkForObj obj gd
+      if checkDefined (objectFull) then (gd, (obj_name objectFull ++ obj_desc objectFull))
+      else (gd, "No " ++ obj ++ " found.")
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
@@ -173,11 +173,11 @@ examine obj gd =
 -}
 
 pour :: Action
-pour obj state =
-   if carrying state mug && carrying state coffeepot then
+pour obj state = undefined
+   {- if carrying state mug && carrying state coffeepot then
       do 
          state {poured -> True}
-
+-}
 {- Drink the coffee. This should only work if the player has a full coffee 
    mug! Doing this is required to be allowed to open the door. Once it is
    done, also update the 'caffeinated' flag in the game state.
@@ -212,8 +212,13 @@ quit :: Command
 quit state = (state { finished = True }, "Bye bye")
 
 checkForObj :: String -> GameData -> Object
-checkForObj obj state = 
+checkForObj obj state 
    | carrying state obj = findObj obj (inventory state)
-   | objectHere obj (location_id state) = objectData obj (location_id state)
-   | otherwise = Nothing
+   | objectHere obj (getRoomData state) = objectData obj (getRoomData state)
+   | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
+
+checkDefined :: Object -> Bool
+checkDefined x
+   | (obj_name x) == "" || (obj_longname x) == "" || (obj_desc x) == "" = False
+   | otherwise = True
 

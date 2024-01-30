@@ -100,9 +100,9 @@ roomExist gd rmid = if filter (\(x,y) -> x == rmid) (world gd) == []
    room and add it to the player's inventory -}
 
 addInv :: GameData -> String -> GameData
-addInv gd obj
-    | objectHere obj (getRoomData gd) = gd {inventory = (inventory gd) ++ [obj]}
-    | otherwise = gd
+addInv gd obj = let room = getRoomData gd
+                    desiredObj = objectData obj room
+                in gd {inventory = (inventory gd) ++ [desiredObj]}
 
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
@@ -110,13 +110,13 @@ addInv gd obj
 
 removeInv :: GameData -> String -> GameData
 removeInv gd obj
-    | carrying gd obj = gd {inventory = filter (\x -> x /= obj) (inventory gd)}
+    | carrying gd obj = gd {inventory = filter (\x -> (obj_name x /= obj)) (inventory gd)}
     | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
 
 carrying :: GameData -> String -> Bool
-carrying gd obj = undefined
+carrying gd obj = elem obj (map (\x -> obj_name x) (inventory gd))
 
 {-
 Define the "go" action. Given a direction and a game state, update the game

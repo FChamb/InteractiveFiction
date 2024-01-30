@@ -4,14 +4,13 @@ import World
 import Parsing
 import Data.Maybe
 
-{-
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
                Open
    deriving Show
--}
 
+{-
 actions :: String -> Maybe Action
 actions "go"      = Just go
 actions "get"     = Just get
@@ -21,6 +20,7 @@ actions "examine" = Just examine
 actions "drink"   = Just drink
 actions "open"    = Just open
 actions _         = Nothing
+-}
 
 {-
 action :: String -> String -> Maybe Command
@@ -33,10 +33,10 @@ action "go south" = Just (Go South)
 --completeAction :: GameData -> Command -> (GameData, String)
 --completeAction :: 
 
-commands :: String -> Maybe Command
-commands "quit"      = Just quit
-commands "inventory" = Just inv
-commands _           = Nothing
+rule :: String -> Maybe Rule
+rule "quit"      = Just quit
+rule "inventory" = Just inv
+rule _           = Nothing
 
 {- Given a direction and a room to move from, return the room id in
    that direction, if it exists.
@@ -50,20 +50,20 @@ Just "kitchen"
 Nothing
 -}
 
-move :: String -> Room -> Maybe String
+move :: Direction -> Room -> Maybe String
 move dir rm = if (result == []) then Nothing else Just (room (head result))
      where result = filter (\x -> dir == exit_dir x) (exits rm)
 
 {- Return True if the object appears in the room. -}
 
-objectHere :: String -> Room -> Bool
-objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
+objectHere :: Object -> Room -> Bool
+objectHere o rm = o `elem` (objects rm)
 
 {- Given an object id and a room description, return a new room description
    without that object -}
 
-removeObject :: String -> Room -> Room
-removeObject o rm = rm {objects = filter (\x -> (obj_name x /= o)) (objects rm)}
+removeObject :: Object -> Room -> Room
+removeObject o rm = rm {objects = filter (/= o) (objects rm)}
 
 {- Given an object and a room description, return a new room description
    with that object added -}
@@ -99,24 +99,24 @@ roomExist gd rmid = if filter (\(x,y) -> x == rmid) (world gd) == []
 {- Given a game state and an object id, find the object in the current
    room and add it to the player's inventory -}
 
-addInv :: GameData -> String -> GameData
-addInv gd obj = let room = getRoomData gd
-                    desiredObj = objectData obj room
-                in gd {inventory = (inventory gd) ++ [desiredObj]}
+addInv :: GameData -> Object -> GameData
+addInv gd obj
+    | objectHere obj (getRoomData gd) = gd {inventory = (inventory gd) ++ [obj]}
+    | otherwise = gd
 
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
 
-removeInv :: GameData -> String -> GameData
+removeInv :: GameData -> Object -> GameData
 removeInv gd obj
-    | carrying gd obj = gd {inventory = filter (\x -> (obj_name x /= obj)) (inventory gd)}
+    | carrying gd obj = gd {inventory = filter (\x -> x /= obj) (inventory gd)}
     | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
 
-carrying :: GameData -> String -> Bool
-carrying gd obj = elem obj (map (\x -> obj_name x) (inventory gd))
+carrying :: GameData -> Object -> Bool
+carrying gd obj = elem obj (inventory gd)
 
 {-
 Define the "go" action. Given a direction and a game state, update the game
@@ -161,11 +161,11 @@ put obj state = undefined
    inventory! -}
 
 examine :: Action
-examine obj gd = 
+examine obj state =
    do
-      let objectFull = checkForObj obj gd
-      if checkDefined (objectFull) then (gd, (obj_name objectFull ++ obj_desc objectFull))
-      else (gd, "No " ++ obj ++ " found.")
+      let objectFull = checkForObj obj state
+      if checkDefined (objectFull) then (state, (obj_name objectFull ++ obj_desc objectFull))
+      else (state, "No " ++ (obj_name obj) ++ " found.")
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
@@ -201,20 +201,20 @@ open obj state = undefined
 
 {- Don't update the game state, just list what the player is carrying -}
 
-inv :: Command
+inv :: Rule
 inv state = (state, showInv (inventory state))
    where showInv [] = "You aren't carrying anything"
          showInv xs = "You are carrying:\n" ++ showInv' xs
          showInv' [x] = obj_longname x
          showInv' (x:xs) = obj_longname x ++ "\n" ++ showInv' xs
 
-quit :: Command
+quit :: Rule
 quit state = (state { finished = True }, "Bye bye")
 
-checkForObj :: String -> GameData -> Object
+checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
-   | carrying state obj = findObj obj (inventory state)
-   | objectHere obj (getRoomData state) = objectData obj (getRoomData state)
+   | carrying state obj = findObj (obj_name obj) (inventory state)
+   | objectHere obj (getRoomData state) = objectData (obj_name obj) (getRoomData state)
    | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
 
 checkDefined :: Object -> Bool

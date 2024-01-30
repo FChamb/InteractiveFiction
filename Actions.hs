@@ -1,7 +1,7 @@
 module Actions where
 
 import World
---import Parsing
+import Parsing
 
 {-
 data Command = Go Direction   | Get Object   |
@@ -62,44 +62,55 @@ objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
    without that object -}
 
 removeObject :: String -> Room -> Room
-removeObject o rm = rm { objects = filter (\x -> (obj_name x /= o)) (objects rm)}
+removeObject o rm = rm {objects = filter (\x -> (obj_name x /= o)) (objects rm)}
 
 {- Given an object and a room description, return a new room description
    with that object added -}
 
 addObject :: Object -> Room -> Room
-addObject o rm = rm { objects = (objects rm) ++ [o]}
+addObject o rm = rm {objects = (objects rm) ++ [o]}
 
 {- Given an object id and a list of objects, return the object data. Note
    that you can assume the object is in the list (i.e. that you have
    checked with 'objectHere') -}
 
 findObj :: String -> [Object] -> Object
-findObj o ds = undefined
+findObj o ds = head (filter (\x -> (obj_name x) == o) ds)
 
 {- Use 'findObj' to find an object in a room description -}
 
 objectData :: String -> Room -> Object
-objectData o rm = undefined
+objectData o rm = findObj o (objects rm)
 
 {- Given a game state and a room id, replace the old room information with
    new data. If the room id does not already exist, add it. -}
 
 updateRoom :: GameData -> String -> Room -> GameData
-updateRoom gd rmid rmdata = undefined
+updateRoom gd rmid rmdata = if roomExist gd rmid
+                               then gd {world=[if (x==rmid) then (rmid, rmdata) else (x,y) | (x,y) <- world gd]}
+                               else gd {world=(world gd ++ [(rmid, rmdata)])}
+
+roomExist :: GameData -> String -> Bool
+roomExist gd rmid = if filter (\(x,y) -> x == rmid) (world gd) == []
+                       then False
+                       else True
 
 {- Given a game state and an object id, find the object in the current
    room and add it to the player's inventory -}
 
 addInv :: GameData -> String -> GameData
-addInv gd obj = undefined
+addInv gd obj
+    | objectHere obj (getRoomData gd) = gd {inventory = (inventory gd) ++ [obj]}
+    | otherwise = gd
 
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
 
 removeInv :: GameData -> String -> GameData
-removeInv gd obj = undefined
+removeInv gd obj
+    | carrying gd obj = gd {inventory = filter (\x -> x /= obj) (inventory gd)}
+    | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
 

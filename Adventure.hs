@@ -14,10 +14,10 @@ winmessage = "Congratulations, you have made it out of the house.\n" ++
    new game state and a message for the user. -}
 
 process :: GameData -> [String] -> (GameData, String)
-process state [cmd,arg] = case actions cmd of
+process state [cmd,arg] = case action cmd of
                             Just fn -> fn arg state
                             Nothing -> (state, "I don't understand")
-process state [cmd]     = case commands cmd of
+process state [cmd]     = case rule cmd of
                             Just fn -> fn state
                             Nothing -> (state, "I don't understand")
 process state _ = (state, "I don't understand")

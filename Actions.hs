@@ -22,13 +22,22 @@ actions "open"    = Just open
 actions _         = Nothing
 -}
 
-{-
 action :: String -> String -> Maybe Command
 action "go" "north" = Just (Go North)
 action "go" "east" = Just (Go East)
 action "go" "west" = Just (Go West)
-action "go south" = Just (Go South)
--}
+action "go" "south" = Just (Go South)
+action "go" "in" = Just (Go In)
+action "go" "out" = Just (Go Out)
+action "get" "mug" = Just (Get mug)
+action "get" "pot" = Just (Get coffeepot)
+action "pour" "coffee" = Just (Pour coffeepot)
+action "examine" "mug" = Just (Examine mug)
+action "examine" "coffee" = Just (Examine fullmug)
+action "examine" "coffeepot" = Just (Examine coffeepot)
+action "drink" "coffee" = Just (Drink fullmug)
+action "open" "door" = Just (Open)
+action _ _ = Nothing
 
 --completeAction :: GameData -> Command -> (GameData, String)
 --completeAction :: 

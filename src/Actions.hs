@@ -199,7 +199,7 @@ examine :: Action
 examine obj state =
    do
       let objectFull = checkForObj obj state
-      if checkDefined (objectFull) then (state, ("Object: " ++ obj_longname objectFull ++ "\nDescription: " ++ obj_desc objectFull))
+      if checkDefined (objectFull) then (state, (obj_name objectFull ++ obj_desc objectFull))
       else (state, "No " ++ (obj_name obj) ++ " found.")
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
@@ -259,15 +259,11 @@ inv state = (state, showInv (inventory state))
 quit :: Rule
 quit state = (state { finished = True }, "Bye bye")
 
-{- Helper function to return object by name if in the current room or inventory, returns empty object if not -}
-
 checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
    | carrying state obj = findObj (obj_name obj) (inventory state)
    | objectHere obj (getRoomData state) = objectData (obj_name obj) (getRoomData state)
    | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
-
-{- Helper function to check whether a given object has valid values for name, longname and description -}
 
 checkDefined :: Object -> Bool
 checkDefined x

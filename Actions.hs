@@ -7,7 +7,7 @@ import Data.Maybe
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
-               Open
+               Use Object     | Open
    deriving Show
 
 {-
@@ -28,10 +28,14 @@ action "go" "east" = Just (Go East)
 action "go" "west" = Just (Go West)
 action "go" "south" = Just (Go South)
 action "go" "in" = Just (Go In)
+action "go" "inside" = Just (Go In)
 action "go" "out" = Just (Go Out)
+action "go" "outside" = Just (Go Out)
 action "get" "mug" = Just (Get mug)
+action "get" "coffee mug" = Just (Get mug)
 action "get" "toothbrush" = Just (Get toothbrush)
 action "get" "pot" = Just (Get coffeepot)
+action "get" "coffeepot" = Just (Get coffeepot)
 action "get" "torch" = Just (Get torch)
 action "drop" "mug" = Just (Drop mug)
 action "drop" "toothbrush" = Just (Drop toothbrush)
@@ -45,6 +49,8 @@ action "examine" "coffeepot" = Just (Examine coffeepot)
 action "examine" "pot" = Just (Examine coffeepot)
 action "examine" "torch" = Just (Examine torch)
 action "drink" "coffee" = Just (Drink fullmug)
+action "use" "toothbrush" = Just (Use toothbrush)
+action "use" "shower" = Just (Use shower)
 action "open" "door" = Just (Open)
 action _ _ = Nothing
 
@@ -55,11 +61,13 @@ completeAction (Drop object) gd = put object gd
 completeAction (Pour object) gd = pour object gd
 completeAction (Examine object) gd = examine object gd
 completeAction (Drink object) gd = drink object gd
+completeAction (Use object) gd = use object gd
 completeAction (Open) gd = open coffeepot gd
 
 rule :: String -> Maybe Rule
 rule "quit"      = Just quit
 rule "inventory" = Just inv
+rule "help"      = Just help
 rule _           = Nothing
 
 {- Given a direction and a room to move from, return the room id in
@@ -168,6 +176,7 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state
+    | obj == shower = (state, "You cannot pick up a shower! Who are you, the Hulk?")
     | objectHere obj (getRoomData state) = (state'', "OK")
     | otherwise = (state, "That item is not in this room!")
         where
@@ -230,6 +239,21 @@ drink obj state
             state' = state {caffeinated = True}
             state'' = state' {inventory = filter (/= fullmug) (inventory state) ++ [mug]}
 
+use :: Action
+use obj state
+    | (obj == toothbrush) && (getRoomData state == bathroom) && (carrying state toothbrush) = (toothState'', "OK")
+    | (obj == toothbrush) && (getRoomData state == bathroom) = (state, "What are you going to brush your teeth with, your fingers?")
+    | (obj == toothbrush) && (carrying state toothbrush) = (state, "You need to be at the bathroom sink to brush your teeth, you animal!")
+    | (obj == toothbrush) = (state, "You need to go to the bathroom first!")
+    | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
+    | (obj == shower) && (getRoomData state == bathroom) = (showerState', "OK")
+    | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
+    | otherwise = (state, "You can not use that right now!")
+        where
+            toothState' = state {brushed = True}
+            toothState'' = toothState' {inventory = filter (/= toothbrush) (inventory state) ++ [usedToothbrush]}
+            showerState' = state {showered = True}
+
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
    and add an exit out to the street.
@@ -241,6 +265,7 @@ drink obj state
 open :: Action
 open obj state
     | (caffeinated state) && getRoomData state == hall = (state', "OK")
+    | caffeinated state = (state, "Can't open the door if you're not at the door!")
     | otherwise = (state, "Can't open the door until you drink coffee!")
         where
             state' = updateRoom state rmid rmdata
@@ -255,6 +280,21 @@ inv state = (state, showInv (inventory state))
          showInv xs = "You are carrying:\n" ++ showInv' xs
          showInv' [x] = obj_longname x
          showInv' (x:xs) = obj_longname x ++ "\n" ++ showInv' xs
+
+help :: Rule
+help state = (state, showCommands)
+   where showCommands = "list of commands!!\
+      \\n\
+      \\n- go (direction) - go to the room to your (direction) [eg. 'go north']\
+      \\n- get (object) - pick up an (object) and put it in your inventory (if that object is in the room)\
+      \\n- drop (object) - drop an (object) into the room (if that object is in your inventory)\
+      \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
+      \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
+      \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
+      \\n- open (door) - open the front door\
+      \\n- inventory - see inventory\
+      \\n- help - see list of commands\
+      \\n- quit - quit the game\n"
 
 quit :: Rule
 quit state = (state { finished = True }, "Bye bye")

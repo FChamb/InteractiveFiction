@@ -31,6 +31,8 @@ action "go" "in" = Just (Go In)
 action "go" "out" = Just (Go Out)
 action "get" "mug" = Just (Get mug)
 action "get" "pot" = Just (Get coffeepot)
+action "drop" "mug" = Just (Drop mug)
+action "drop" "pot" = Just (Drop coffeepot)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
 action "examine" "coffee" = Just (Examine fullmug)
@@ -39,8 +41,14 @@ action "drink" "coffee" = Just (Drink fullmug)
 action "open" "door" = Just (Open)
 action _ _ = Nothing
 
---completeAction :: GameData -> Command -> (GameData, String)
---completeAction :: 
+completeAction :: Command -> GameData -> (GameData, String)
+completeAction (Go direction) gd = go direction gd
+completeAction (Get object) gd = get object gd
+completeAction (Drop object) gd = put object gd
+completeAction (Pour object) gd = pour object gd
+completeAction (Examine object) gd = examine object gd
+completeAction (Drink object) gd = drink object gd
+completeAction (Open) gd = open coffeepot gd
 
 rule :: String -> Maybe Rule
 rule "quit"      = Just quit
@@ -96,7 +104,7 @@ objectData o rm = findObj o (objects rm)
    new data. If the room id does not already exist, add it. -}
 
 updateRoom :: GameData -> String -> Room -> GameData
-updateRoom gd rmid rmdata = if roomExist gd rmid
+updateRoom gd rmid rmdata = if lookup rmid (world gd) /= Nothing
                                then gd {world=[if (x==rmid) then (rmid, rmdata) else (x,y) | (x,y) <- world gd]}
                                else gd {world=(world gd ++ [(rmid, rmdata)])}
 
@@ -139,7 +147,7 @@ e.g.
 
 -}
 
-go :: Action
+go :: Direction -> GameData -> (GameData, String)
 go dir state = undefined
 
 {- Remove an item from the current room, and put it in the player's inventory.

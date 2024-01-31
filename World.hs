@@ -51,21 +51,28 @@ type Rule = GameData -> (GameData, String)
 data Direction = North | East | West | South | Out | In
    deriving (Show, Eq)
 
-mug, fullmug, coffeepot :: Object
-mug       = Obj "mug" "a coffee mug" "A coffee mug"
-fullmug   = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
-coffeepot = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
+mug, fullmug, coffeepot, torch, toothbrush :: Object
+mug        = Obj "mug" "a coffee mug" "A coffee mug"
+fullmug    = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
+coffeepot  = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
+torch      = Obj "torch" "a black torch" "A black torch with no batteries"
+toothbrush = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
 
 bedroom, kitchen, hall, street :: Room
 
 bedroom = Room "You are in your bedroom."
-               [Exit North "To the north is a kitchen. " "kitchen"]
+               [Exit North "To the north is a kitchen. " "kitchen",
+                Exit South "To the south is a bathroom. " "bathroom"]
                [mug]
+
+bathroom = Room "You are in the bathroom."
+                [Exit North "To the north is your bedroom. " "bedroom"]
+                [toothbrush]
 
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
                 Exit West "To the west is a hallway. " "hall"]
-               [coffeepot]
+               [coffeepot, torch]
 
 hall = Room "You are in the hallway. The front door is closed. "
             [Exit East "To the east is a kitchen. " "kitchen"]
@@ -82,6 +89,7 @@ street = Room "You have made it out of the house."
               []
 
 gameworld = [("bedroom", bedroom),
+             ("bathroom", bathroom),
              ("kitchen", kitchen),
              ("hall", hall),
              ("street", street)]

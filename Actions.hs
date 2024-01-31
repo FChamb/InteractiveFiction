@@ -30,14 +30,20 @@ action "go" "south" = Just (Go South)
 action "go" "in" = Just (Go In)
 action "go" "out" = Just (Go Out)
 action "get" "mug" = Just (Get mug)
+action "get" "toothbrush" = Just (Get toothbrush)
 action "get" "pot" = Just (Get coffeepot)
+action "get" "torch" = Just (Get torch)
 action "drop" "mug" = Just (Drop mug)
+action "drop" "toothbrush" = Just (Drop toothbrush)
 action "drop" "pot" = Just (Drop coffeepot)
+action "drop" "torch" = Just (Drop torch)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
+action "examine" "toothbrush" = Just (Examine toothbrush)
 action "examine" "coffee" = Just (Examine fullmug)
 action "examine" "coffeepot" = Just (Examine coffeepot)
 action "examine" "pot" = Just (Examine coffeepot)
+action "examine" "torch" = Just (Examine torch)
 action "drink" "coffee" = Just (Drink fullmug)
 action "open" "door" = Just (Open)
 action _ _ = Nothing
@@ -218,7 +224,7 @@ pour obj state
 
 drink :: Action
 drink obj state
-    | carrying state fullmug = (state'', "OK")
+    | carrying state fullmug && (poured state) = (state'', "OK")
     | otherwise = (state, "You can not drink right now!")
         where
             state' = state {caffeinated = True}

@@ -37,6 +37,7 @@ action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
 action "examine" "coffee" = Just (Examine fullmug)
 action "examine" "coffeepot" = Just (Examine coffeepot)
+action "examine" "pot" = Just (Examine coffeepot)
 action "drink" "coffee" = Just (Drink fullmug)
 action "open" "door" = Just (Open)
 action _ _ = Nothing
@@ -203,7 +204,7 @@ examine obj state =
 pour :: Action
 pour obj state
     | carrying state mug && carrying state coffeepot = (state'', "OK")
-    | otherwise = (state, "You can not do that right now!")
+    | otherwise = (state, "You can not pour right now!")
         where
             state' = state {poured = True}
             state'' = state' {inventory = filter (/= mug) (inventory state) ++ [fullmug]}
@@ -216,7 +217,12 @@ pour obj state
 -}
 
 drink :: Action
-drink obj state = undefined
+drink obj state
+    | carrying state fullmug = (state'', "OK")
+    | otherwise = (state, "You can not drink right now!")
+        where
+            state' = state {caffeinated = True}
+            state'' = state' {inventory = filter (/= fullmug) (inventory state) ++ [mug]}
 
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
@@ -227,7 +233,13 @@ drink obj state = undefined
 -}
 
 open :: Action
-open obj state = undefined
+open obj state
+    | (caffeinated state) && getRoomData state == hall = (state', "OK")
+    | otherwise = (state, "Can't open the door until you drink coffee!")
+        where
+            state' = updateRoom state rmid rmdata
+            rmid = "hall"
+            rmdata = (Room openedhall openedexits [])
 
 {- Don't update the game state, just list what the player is carrying -}
 

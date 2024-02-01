@@ -190,7 +190,6 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state
-    | obj == shower = (state, "You cannot pick up a shower! Who are you, the Hulk?")
     | objectHere obj (getRoomData state) = (state'', "OK")
     | otherwise = (state, "That item is not in this room!")
         where

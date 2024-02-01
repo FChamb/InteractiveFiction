@@ -45,13 +45,14 @@ action "drop" "pot" = Just (Drop coffeepot)
 action "drop" "torch" = Just (Drop torch)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
-action "examine" "latte" = Just (Examine milkMug)
+action "examine" "latte" = Just (Examine milkyCoffeeMug)
 action "examine" "toothbrush" = Just (Examine toothbrush)
 action "examine" "coffee" = Just (Examine fullmug)
 action "examine" "coffeepot" = Just (Examine coffeepot)
 action "examine" "pot" = Just (Examine coffeepot)
 action "examine" "torch" = Just (Examine torch)
 action "drink" "coffee" = Just (Drink fullmug)
+action "drink" "latte" = Just (Drink milkyCoffeeMug)
 action "use" "toothbrush" = Just (Use toothbrush)
 action "use" "shower" = Just (Use shower)
 action "open" "door" = Just (Open)
@@ -61,6 +62,8 @@ action _ _ = Nothing
 
 action2 :: String -> String -> String -> Maybe Command
 action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
+action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+
 action2 _ _ _ = Nothing
 
 completeAction :: Command -> GameData -> (GameData, String)
@@ -244,11 +247,12 @@ pour obj state
 
 drink :: Action
 drink obj state
-    | carrying state fullmug && (poured state) = (state'', "OK")
+    | not (obj == fullmug || obj == milkyCoffeeMug) = (state, "This is not drinkable.")
+    | carrying state obj && (poured state) = (state'', "OK")
     | otherwise = (state, "You can not drink right now!")
         where
             state' = state {caffeinated = True}
-            state'' = state' {inventory = filter (/= fullmug) (inventory state) ++ [mug]}
+            state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
 
 use :: Action
 use obj state
@@ -292,14 +296,26 @@ open obj state
             rmid = "hall"
             rmdata = (Room openedhall openedexits [])
 
+tripleSearch :: Object -> Object -> [(Object, Object, [Object])] -> [Object]
+tripleSearch _ _ [] = []
+tripleSearch x y ((a,a1,b):xs)
+    | (x == a && y == a1) = b
+    | (y == a && x == a1) = b
+    | otherwise = tripleSearch x y xs
+
 combine :: Object -> Object -> GameData -> (GameData, String) -- #comment me later
 combine obj obj2 state
-   | carrying state fullmug && (carrying state milk) = (state'', "OK")
-   | otherwise = (state, "You can not combine these!")
+   | outcome == [] = (state, "You cannot combine these.")
+   | outcome /= [] && (carrying state obj) && (carrying state obj2) = (state'', "OK")
+   | otherwise = (state, "You can not combine things you haven't picked up!")
         where
-            state' = state {inventory = filter (/= fullmug) (inventory state) ++ [milkMug]}
-            state'' = state' {inventory = filter (/= milk) (inventory state') ++ [emptyMilk]}
+            outcome = tripleSearch obj obj2 recipes
+            state'' = combineAdd outcome (state')
+            state' = state {inventory = filter (\x -> x /= obj && x /= obj2) (inventory state)}
 
+combineAdd :: [Object] -> GameData -> GameData
+combineAdd [] gd = gd
+combineAdd (x:xs) gd = combineAdd xs gd {inventory = (inventory gd) ++ [x]}
 
 {- Don't update the game state, just list what the player is carrying -}
 

@@ -58,10 +58,12 @@ type Rule = GameData -> (GameData, String)
 data Direction = North | East | West | South | Out | In
    deriving (Show, Eq)
 
+recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk])]
+
 mug, fullmug, coffeepot, torch, toothbrush :: Object
 mug            = Obj "mug" "a coffee mug" "A coffee mug"
 fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
-milkMug        = Obj "mug" "a full and milky coffee mug" "A coffee mug containing freshly brewed milky coffee"
+milkyCoffeeMug = Obj "mug" "a full and milky coffee mug" "A coffee mug containing freshly brewed milky coffee"
 emptyMilk      = Obj "milk" "an empty jug of milk" "An empty plastic container smelling faintly of milk."
 coffeepot      = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
 torch          = Obj "torch" "a black torch" "A black torch with no batteries"

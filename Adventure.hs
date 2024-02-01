@@ -25,7 +25,7 @@ makeWinMessage gd = winMessage
          | not (lightOn gd) = "...and you turned the light off before you left! How eco-friendly.\n"
          | otherwise = ""  
       gameMessage
-         | score == 0 = "You didn't shower, brush your teeth or eat. You do know these asre the bare minimum of a morning routine, right?\n"
+         | score == 0 = "You didn't shower, brush your teeth or eat. You do know that's the bare minimum of a morning routine, right?\n"
          | score == 3 = "You showered, brushed your teeth and ate breakfast! I'm very proud of you for doing the bare minimum of human function.\n"
          | otherwise = cleanMessage ++ eatMessage
       score = length (filter (==True) [(brushed gd), (eaten gd), (showered gd)])

@@ -7,7 +7,8 @@ import Data.Maybe
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
-               Use Object     | Open
+               Use Object     | Open         |
+               LightsOn Object| Combine Object Object
    deriving Show
 
 {-
@@ -52,7 +53,13 @@ action "drink" "coffee" = Just (Drink fullmug)
 action "use" "toothbrush" = Just (Use toothbrush)
 action "use" "shower" = Just (Use shower)
 action "open" "door" = Just (Open)
+action "use" "lightswitch" = Just (LightsOn lightswitch)
+action "use" "torch" = Just (LightsOn torch)
 action _ _ = Nothing
+
+action2 :: String -> String -> String -> Maybe Command
+action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
+action2 _ _ _ = Nothing
 
 completeAction :: Command -> GameData -> (GameData, String)
 completeAction (Go direction) gd = go direction gd
@@ -63,6 +70,8 @@ completeAction (Examine object) gd = examine object gd
 completeAction (Drink object) gd = drink object gd
 completeAction (Use object) gd = use object gd
 completeAction (Open) gd = open coffeepot gd
+completeAction (LightsOn object) gd = switchLight object gd
+completeAction (Combine object object2) gd = combine object object2 gd
 
 rule :: String -> Maybe Rule
 rule "quit"      = Just quit
@@ -254,6 +263,15 @@ use obj state
             toothState'' = toothState' {inventory = filter (/= toothbrush) (inventory state) ++ [usedToothbrush]}
             showerState' = state {showered = True}
 
+switchLight :: Action -- #comment me and use later
+switchLight obj state
+    | (obj == lightswitch) = (lightState, "OK")
+    | (obj == torch) && (carrying state torch) = (torchState, "OK")
+    | otherwise = (state, "You need a torch for this.")
+        where
+            lightState = state {lightOn = not (lightOn state), lightsOnEver = True}
+            torchState = state {torchLightOn = not (torchLightOn state), torchOnEver = True}
+
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
    and add an exit out to the street.
@@ -271,6 +289,10 @@ open obj state
             state' = updateRoom state rmid rmdata
             rmid = "hall"
             rmdata = (Room openedhall openedexits [])
+
+combine :: Object -> Object -> GameData -> (GameData, String)
+combine obj obj2 gd = (gd, "OK")
+
 
 {- Don't update the game state, just list what the player is carrying -}
 
@@ -291,6 +313,7 @@ help state = (state, showCommands)
       \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
       \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
       \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
+      \\n - use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
       \\n- open (door) - open the front door\
       \\n- inventory - see inventory\
       \\n- help - see list of commands\

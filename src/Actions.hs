@@ -3,7 +3,7 @@ module Actions where
 import World
 import Parsing
 import Data.Maybe
-import Test.QuickCheck
+-- import Test.QuickCheck
 
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
@@ -259,8 +259,8 @@ drink obj state
 
 use :: Action
 use obj state
-    | (carrying state toothbrush) = (toothState', "OK")
-    | (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
+    | (obj == toothbrush) && (carrying state toothbrush) = (toothState', "OK")
+    | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
     | (obj == shower) && (getRoomData state == bathroom) = (showerState, "OK")
     | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
     | otherwise = (state, "You can not use that right now!")

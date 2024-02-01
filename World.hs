@@ -23,6 +23,10 @@ data GameData = GameData { location_id :: String, -- where player is
                            inventory :: [Object], -- objects player has
                            poured :: Bool, -- coffee is poured
                            caffeinated :: Bool, -- coffee is drunk
+                           eaten :: Bool, -- food was eaten
+                           brushed :: Bool, -- teeth brushed
+                           showered :: Bool, -- took a shower
+                           lightON :: Bool, -- turned on the lights
                            finished :: Bool -- set to True at the end
                          }
 
@@ -52,11 +56,13 @@ data Direction = North | East | West | South | Out | In
    deriving (Show, Eq)
 
 mug, fullmug, coffeepot, torch, toothbrush :: Object
-mug        = Obj "mug" "a coffee mug" "A coffee mug"
-fullmug    = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
-coffeepot  = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
-torch      = Obj "torch" "a black torch" "A black torch with no batteries"
-toothbrush = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
+mug            = Obj "mug" "a coffee mug" "A coffee mug"
+fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
+coffeepot      = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
+torch          = Obj "torch" "a black torch" "A black torch with no batteries"
+toothbrush     = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
+usedToothbrush = Obj "used toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with no toothpaste on it. It's still wet"
+shower         = Obj "shower" "a shower" "It's a shower. It looks like it's never been used. Ew."
 
 bedroom, kitchen, hall, street :: Room
 
@@ -95,7 +101,7 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False
+initState = GameData "bedroom" gameworld [] False False False False False False False
 
 {- Return the room the player is currently in. -}
 

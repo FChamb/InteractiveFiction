@@ -190,7 +190,6 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state
-    | obj == shower = (state, "You cannot pick up a shower! Who are you, the Hulk?")
     | objectHere obj (getRoomData state) = (state'', "OK")
     | otherwise = (state, "That item is not in this room!")
         where
@@ -336,7 +335,7 @@ help state = (state, showCommands)
       \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
       \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
       \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
-      \\n - use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
+      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
       \\n- open (door) - open the front door\
       \\n- inventory - see inventory\
       \\n- help - see list of commands\

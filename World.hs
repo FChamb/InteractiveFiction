@@ -80,7 +80,7 @@ bedroom = Room "You are in your bedroom."
                 Exit South "To the south is a bathroom. " "bathroom"]
                [mug]
 
-bathroom = Room "You are in the bathroom."
+bathroom = Room "You are in the bathroom. There is a shower and sink."
                 [Exit North "To the north is your bedroom. " "bedroom"]
                 [toothbrush]
 

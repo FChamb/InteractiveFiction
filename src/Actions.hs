@@ -259,9 +259,11 @@ drink obj state
 
 use :: Action
 use obj state
-    | (obj == toothbrush) && (carrying state toothbrush) = (toothState', "OK")
+    | (obj == toothbrush) && (location_id state == "bathroom") && (carrying state toothbrush) = (toothState', "OK")
+    | (obj == toothbrush) && (location_id state == "bathroom") = (state, "What are you gonna brush your teeth with, your fingers?")
+    | (obj == toothbrush) && (carrying state toothbrush) = (state, "You need to be at the bathroom sink to brush your teeth, you animal!")
     | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
-    | (obj == shower) && (getRoomData state == bathroom) = (showerState, "OK")
+    | (obj == shower) && (location_id state == "bathroom") = (showerState, "OK")
     | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
     | otherwise = (state, "You can not use that right now!")
         where

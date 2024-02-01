@@ -75,7 +75,7 @@ type Rule = GameData -> (GameData, String)
 data Direction = North | East | West | South | Out | In
    deriving (Show, Eq)
 
-recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk])]
+recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk]), (emptyTorch, batteries, [torch]), (eggs, bread, [eggyBread])]
 
 mug, fullmug, milkyCoffeeMug, emptyMilk, coffeepot, torch, emptyTorch, batteries, toothbrush, usedToothbrush, shower, lightswitch, milk, eggs, bread :: Object
 mug            = Obj "mug" "a coffee mug" "A coffee mug"
@@ -93,6 +93,7 @@ lightswitch    = Obj "lightswitch" "a lightswitch" "It's a lightswitch. What mor
 milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant it came from, but it seems to still be fresh?"
 eggs           = Obj "eggs" "a box of eggs" "A box with some eggs. Very droppable."
 bread          = Obj "bread" "a loaf of bread" "Bread, with an unknown amount or lack thereof of gluten."
+eggyBread      = Obj "eggy bread" "a soggy, eggy loaf of bread" "Like french toast, if you squint. It's raw, but I'm sure that's fine."
 
 kitchenCupboard :: Box
 kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] True

@@ -60,7 +60,7 @@ data Direction = North | East | West | South | Out | In
 
 recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk])]
 
-mug, fullmug, coffeepot, torch, toothbrush :: Object
+mug, fullmug, coffeepot, torch, toothbrush, usedToothbrush, shower, lightswitch, milk :: Object
 mug            = Obj "mug" "a coffee mug" "A coffee mug"
 fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
 milkyCoffeeMug = Obj "mug" "a full and milky coffee mug" "A coffee mug containing freshly brewed milky coffee"
@@ -73,7 +73,7 @@ shower         = Obj "shower" "a shower" "It's a shower. It looks like it's neve
 lightswitch    = Obj "lightswitch" "a lightswitch" "It's a lightswitch. What more could you need to know?"
 milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant it came from, but it seems to still be fresh?"
 
-bedroom, kitchen, hall, street :: Room
+bedroom, bathroom, kitchen, hall, street :: Room
 
 bedroom = Room "You are in your bedroom."
                [Exit North "To the north is a kitchen. " "kitchen",

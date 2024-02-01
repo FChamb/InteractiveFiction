@@ -1,5 +1,8 @@
 module World where
 
+import Data.List (intersperse)
+
+
 data Object = Obj { obj_name :: String,
                     obj_longname :: String,
                     obj_desc :: String }
@@ -15,8 +18,19 @@ data Exit = Exit { exit_dir :: Direction,
 
 data Room = Room { room_desc :: String,
                    exits :: [Exit],
-                   objects :: [Object] }
+                   objects :: [Object],
+                   containers :: [Box] }
    deriving Eq
+
+data Box = Box { box_name :: String,
+                  items :: [Object],
+                  opened :: Bool }
+   deriving Eq
+
+instance Show Box where
+   show box
+      | opened box = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
+      | otherwise = box_name box ++ " (closed)"
 
 data GameData = GameData { location_id :: String, -- where player is
                            world :: [(String, Room)],
@@ -37,14 +51,17 @@ won :: GameData -> Bool
 won gd = location_id gd == "street"
 
 instance Show Room where
-    show (Room desc exits objs) = desc ++ "\n" ++ concatMap exit_desc exits ++
-                                  showInv objs
+    show (Room desc exits objs boxes) = desc ++ "\n" ++ concatMap exit_desc exits ++
+                                  showInv objs ++ showBoxes boxes
        where showInv [] = ""
              showInv xs = "\n\nYou can see: " ++ showInv' xs
-             showInv' [x] = show x
+             showInv' [x] = show x ++ ". "
              showInv' (x:xs) = show x ++ ", " ++ showInv' xs
+             showBoxes [] = ""
+             showBoxes xs = "There is also: " ++ showBoxes' xs
+             showBoxes' [x] = show x
+             showBoxes' (x:xs) = show x ++ ", " ++ showBoxes' xs
                                   
-
 instance Show GameData where
     show gd = show (getRoomData gd)
 
@@ -60,18 +77,25 @@ data Direction = North | East | West | South | Out | In
 
 recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk])]
 
-mug, fullmug, coffeepot, torch, toothbrush, usedToothbrush, shower, lightswitch, milk :: Object
+mug, fullmug, milkyCoffeeMug, emptyMilk, coffeepot, torch, emptyTorch, batteries, toothbrush, usedToothbrush, shower, lightswitch, milk, eggs, bread :: Object
 mug            = Obj "mug" "a coffee mug" "A coffee mug"
 fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
 milkyCoffeeMug = Obj "mug" "a full and milky coffee mug" "A coffee mug containing freshly brewed milky coffee"
 emptyMilk      = Obj "milk" "an empty jug of milk" "An empty plastic container smelling faintly of milk."
 coffeepot      = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
-torch          = Obj "torch" "a black torch" "A black torch with no batteries"
+emptyTorch     = Obj "torch" "a black torch" "A black torch with no batteries"
+torch          = Obj "torch" "a black torch" "A black torch with fresh batteries"
+batteries      = Obj "batteries" "two AA batteries" "Two round AA batteries. They look crunchy. Don't put them in your mouth."
 toothbrush     = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
 usedToothbrush = Obj "used toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with no toothpaste on it. It's still wet."
 shower         = Obj "shower" "a shower" "It's a shower. It looks like it's never been used. Ew."
 lightswitch    = Obj "lightswitch" "a lightswitch" "It's a lightswitch. What more could you need to know?"
 milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant it came from, but it seems to still be fresh?"
+eggs           = Obj "eggs" "a box of eggs" "A box with some eggs. Very droppable."
+bread          = Obj "bread" "a loaf of bread" "Bread, with an unknown amount or lack thereof of gluten."
+
+kitchenCupboard :: Box
+kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] True
 
 bedroom, bathroom, kitchen, hall, street :: Room
 
@@ -79,18 +103,22 @@ bedroom = Room "You are in your bedroom."
                [Exit North "To the north is a kitchen. " "kitchen",
                 Exit South "To the south is a bathroom. " "bathroom"]
                [mug]
+               []
 
 bathroom = Room "You are in the bathroom."
                 [Exit North "To the north is your bedroom. " "bedroom"]
-                [toothbrush]
+                [toothbrush, shower]
+                []
 
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
                 Exit West "To the west is a hallway. " "hall"]
-               [coffeepot, torch, milk]
+               [coffeepot, emptyTorch, milk]
+               [kitchenCupboard]
 
 hall = Room "You are in the hallway. The front door is closed. "
             [Exit East "To the east is a kitchen. " "kitchen"]
+            []
             []
 
 -- New data about the hall for when we open the door
@@ -101,6 +129,7 @@ openedexits = [Exit East "To the east is a kitchen. " "kitchen",
 
 street = Room "You have made it out of the house."
               [Exit In "You can go back inside if you like. " "hall"]
+              []
               []
 
 gameworld = [("bedroom", bedroom),

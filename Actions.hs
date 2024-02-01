@@ -294,7 +294,7 @@ open obj state
         where
             state' = updateRoom state rmid rmdata
             rmid = "hall"
-            rmdata = (Room openedhall openedexits [])
+            rmdata = (Room openedhall openedexits [] [])
 
 tripleSearch :: Object -> Object -> [(Object, Object, [Object])] -> [Object]
 tripleSearch _ _ [] = []

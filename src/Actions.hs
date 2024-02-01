@@ -63,6 +63,10 @@ action _ _ = Nothing
 action2 :: String -> String -> String -> Maybe Command
 action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
 action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+action2 "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
+action2 "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
+action2 "combine" "eggs" "bread" = Just (Combine bread eggs)
+action2 "combine" "bread" "eggs" = Just (Combine eggs bread)
 action2 _ _ _ = Nothing
 
 completeAction :: Command -> GameData -> (GameData, String)
@@ -289,7 +293,7 @@ open obj state
         where
             state' = updateRoom state rmid rmdata
             rmid = "hall"
-            rmdata = (Room openedhall openedexits [])
+            rmdata = (Room openedhall openedexits [] [])
 
 tripleSearch :: Object -> Object -> [(Object, Object, [Object])] -> [Object]
 tripleSearch _ _ [] = []

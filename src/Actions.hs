@@ -7,7 +7,8 @@ import Data.Maybe
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
-               Open
+               Use Object     | Open         |
+               LightsOn Object| Combine Object Object
    deriving Show
 
 {-
@@ -28,10 +29,15 @@ action "go" "east" = Just (Go East)
 action "go" "west" = Just (Go West)
 action "go" "south" = Just (Go South)
 action "go" "in" = Just (Go In)
+action "go" "inside" = Just (Go In)
 action "go" "out" = Just (Go Out)
+action "go" "outside" = Just (Go Out)
 action "get" "mug" = Just (Get mug)
+action "get" "milk" = Just (Get milk)
+action "get" "coffee mug" = Just (Get mug)
 action "get" "toothbrush" = Just (Get toothbrush)
 action "get" "pot" = Just (Get coffeepot)
+action "get" "coffeepot" = Just (Get coffeepot)
 action "get" "torch" = Just (Get torch)
 action "drop" "mug" = Just (Drop mug)
 action "drop" "toothbrush" = Just (Drop toothbrush)
@@ -39,14 +45,26 @@ action "drop" "pot" = Just (Drop coffeepot)
 action "drop" "torch" = Just (Drop torch)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
+action "examine" "latte" = Just (Examine milkyCoffeeMug)
 action "examine" "toothbrush" = Just (Examine toothbrush)
 action "examine" "coffee" = Just (Examine fullmug)
 action "examine" "coffeepot" = Just (Examine coffeepot)
 action "examine" "pot" = Just (Examine coffeepot)
 action "examine" "torch" = Just (Examine torch)
 action "drink" "coffee" = Just (Drink fullmug)
+action "drink" "latte" = Just (Drink milkyCoffeeMug)
+action "use" "toothbrush" = Just (Use toothbrush)
+action "use" "shower" = Just (Use shower)
 action "open" "door" = Just (Open)
+action "use" "lightswitch" = Just (LightsOn lightswitch)
+action "use" "torch" = Just (LightsOn torch)
 action _ _ = Nothing
+
+action2 :: String -> String -> String -> Maybe Command
+action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
+action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+
+action2 _ _ _ = Nothing
 
 completeAction :: Command -> GameData -> (GameData, String)
 completeAction (Go direction) gd = go direction gd
@@ -55,11 +73,15 @@ completeAction (Drop object) gd = put object gd
 completeAction (Pour object) gd = pour object gd
 completeAction (Examine object) gd = examine object gd
 completeAction (Drink object) gd = drink object gd
+completeAction (Use object) gd = use object gd
 completeAction (Open) gd = open coffeepot gd
+completeAction (LightsOn object) gd = switchLight object gd
+completeAction (Combine object object2) gd = combine object object2 gd
 
 rule :: String -> Maybe Rule
 rule "quit"      = Just quit
 rule "inventory" = Just inv
+rule "help"      = Just help
 rule _           = Nothing
 
 {- Given a direction and a room to move from, return the room id in
@@ -199,7 +221,7 @@ examine :: Action
 examine obj state =
    do
       let objectFull = checkForObj obj state
-      if checkDefined (objectFull) then (state, (obj_name objectFull ++ obj_desc objectFull))
+      if checkDefined (objectFull) then (state, ("Object: " ++ obj_longname objectFull ++ "\nDescription: " ++ obj_desc objectFull))
       else (state, "No " ++ (obj_name obj) ++ " found.")
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
@@ -224,11 +246,33 @@ pour obj state
 
 drink :: Action
 drink obj state
-    | carrying state fullmug && (poured state) = (state'', "OK")
+    | not (obj == fullmug || obj == milkyCoffeeMug) = (state, "This is not drinkable.")
+    | carrying state obj && (poured state) = (state'', "OK")
     | otherwise = (state, "You can not drink right now!")
         where
             state' = state {caffeinated = True}
-            state'' = state' {inventory = filter (/= fullmug) (inventory state) ++ [mug]}
+            state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
+
+use :: Action
+use obj state
+    | (carrying state toothbrush) = (toothState', "OK")
+    | (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
+    | (obj == shower) && (getRoomData state == bathroom) = (showerState, "OK")
+    | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
+    | otherwise = (state, "You can not use that right now!")
+        where
+            toothState = state {brushed = True}
+            toothState' = toothState {inventory = filter (/= toothbrush) (inventory state) ++ [usedToothbrush]}
+            showerState = state {showered = True}
+
+switchLight :: Action -- #comment me and use later
+switchLight obj state
+    | (obj == lightswitch) = (lightState, "OK")
+    | (obj == torch) && (carrying state torch) = (torchState, "OK")
+    | otherwise = (state, "You need a torch for this.")
+        where
+            lightState = state {lightOn = not (lightOn state), lightsOnEver = True}
+            torchState = state {torchLightOn = not (torchLightOn state), torchOnEver = True}
 
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
@@ -241,11 +285,33 @@ drink obj state
 open :: Action
 open obj state
     | (caffeinated state) && getRoomData state == hall = (state', "OK")
+    | caffeinated state = (state, "Can't open the door if you're not at the door!")
     | otherwise = (state, "Can't open the door until you drink coffee!")
         where
             state' = updateRoom state rmid rmdata
             rmid = "hall"
             rmdata = (Room openedhall openedexits [])
+
+tripleSearch :: Object -> Object -> [(Object, Object, [Object])] -> [Object]
+tripleSearch _ _ [] = []
+tripleSearch x y ((a,a1,b):xs)
+    | (x == a && y == a1) = b
+    | (y == a && x == a1) = b
+    | otherwise = tripleSearch x y xs
+
+combine :: Object -> Object -> GameData -> (GameData, String) -- #comment me later
+combine obj obj2 state
+   | outcome == [] = (state, "You cannot combine these.")
+   | outcome /= [] && (carrying state obj) && (carrying state obj2) = (state'', "OK")
+   | otherwise = (state, "You can not combine things you haven't picked up!")
+        where
+            outcome = tripleSearch obj obj2 recipes
+            state'' = combineAdd outcome (state')
+            state' = state {inventory = filter (\x -> x /= obj && x /= obj2) (inventory state)}
+
+combineAdd :: [Object] -> GameData -> GameData
+combineAdd [] gd = gd
+combineAdd (x:xs) gd = combineAdd xs gd {inventory = (inventory gd) ++ [x]}
 
 {- Don't update the game state, just list what the player is carrying -}
 
@@ -256,14 +322,34 @@ inv state = (state, showInv (inventory state))
          showInv' [x] = obj_longname x
          showInv' (x:xs) = obj_longname x ++ "\n" ++ showInv' xs
 
+help :: Rule
+help state = (state, showCommands)
+   where showCommands = "list of commands!!\
+      \\n\
+      \\n- go (direction) - go to the room to your (direction) [eg. 'go north']\
+      \\n- get (object) - pick up an (object) and put it in your inventory (if that object is in the room)\
+      \\n- drop (object) - drop an (object) into the room (if that object is in your inventory)\
+      \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
+      \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
+      \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
+      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
+      \\n- open (door) - open the front door\
+      \\n- inventory - see inventory\
+      \\n- help - see list of commands\
+      \\n- quit - quit the game\n"
+
 quit :: Rule
 quit state = (state { finished = True }, "Bye bye")
+
+{- Helper function to return object by name if in the current room or inventory, returns empty object if not -}
 
 checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
    | carrying state obj = findObj (obj_name obj) (inventory state)
    | objectHere obj (getRoomData state) = objectData (obj_name obj) (getRoomData state)
    | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
+
+{- Helper function to check whether a given object has valid values for name, longname and description -}
 
 checkDefined :: Object -> Bool
 checkDefined x

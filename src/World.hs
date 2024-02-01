@@ -23,6 +23,13 @@ data GameData = GameData { location_id :: String, -- where player is
                            inventory :: [Object], -- objects player has
                            poured :: Bool, -- coffee is poured
                            caffeinated :: Bool, -- coffee is drunk
+                           eaten :: Bool, -- food was eaten
+                           brushed :: Bool, -- teeth brushed
+                           showered :: Bool, -- took a shower
+                           lightOn :: Bool, -- turned on the lights
+                           torchLightOn :: Bool, -- turned on torch
+                           lightsOnEver :: Bool, -- to track if the player ever turned the lights on (achievement)
+                           torchOnEver :: Bool, -- to track if the player ever turned the torch on (achievement)
                            finished :: Bool -- set to True at the end
                          }
 
@@ -51,28 +58,36 @@ type Rule = GameData -> (GameData, String)
 data Direction = North | East | West | South | Out | In
    deriving (Show, Eq)
 
-mug, fullmug, coffeepot, torch, toothbrush :: Object
-mug        = Obj "mug" "a coffee mug" "A coffee mug"
-fullmug    = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
-coffeepot  = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
-torch      = Obj "torch" "a black torch" "A black torch with no batteries"
-toothbrush = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
+recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk])]
 
-bedroom, kitchen, hall, street :: Room
+mug, fullmug, coffeepot, torch, toothbrush, usedToothbrush, shower, lightswitch, milk :: Object
+mug            = Obj "mug" "a coffee mug" "A coffee mug"
+fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
+milkyCoffeeMug = Obj "mug" "a full and milky coffee mug" "A coffee mug containing freshly brewed milky coffee"
+emptyMilk      = Obj "milk" "an empty jug of milk" "An empty plastic container smelling faintly of milk."
+coffeepot      = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
+torch          = Obj "torch" "a black torch" "A black torch with no batteries"
+toothbrush     = Obj "toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with toothpaste on it"
+usedToothbrush = Obj "used toothbrush" "a blue and white toothbrush" "A blue and white toothbrush with no toothpaste on it. It's still wet."
+shower         = Obj "shower" "a shower" "It's a shower. It looks like it's never been used. Ew."
+lightswitch    = Obj "lightswitch" "a lightswitch" "It's a lightswitch. What more could you need to know?"
+milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant it came from, but it seems to still be fresh?"
+
+bedroom, bathroom, kitchen, hall, street :: Room
 
 bedroom = Room "You are in your bedroom."
                [Exit North "To the north is a kitchen. " "kitchen",
                 Exit South "To the south is a bathroom. " "bathroom"]
                [mug]
 
-bathroom = Room "You are in the bathroom."
+bathroom = Room "You are in the bathroom. There is a shower and sink."
                 [Exit North "To the north is your bedroom. " "bedroom"]
                 [toothbrush]
 
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
                 Exit West "To the west is a hallway. " "hall"]
-               [coffeepot, torch]
+               [coffeepot, torch, milk]
 
 hall = Room "You are in the hallway. The front door is closed. "
             [Exit East "To the east is a kitchen. " "kitchen"]
@@ -95,7 +110,7 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False
+initState = GameData "bedroom" gameworld [] False False False False False False False False False False
 
 {- Return the room the player is currently in. -}
 

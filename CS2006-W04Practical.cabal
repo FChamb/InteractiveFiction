@@ -5,7 +5,7 @@ cabal-version:       >=1.10
 
 name:                CS2006-W04Practical
 version:             0.1.0.0
--- synopsis:
+synopsis:            A simple text based interface game.
 description:         Implementation of the first CS2006 Practical, Interactive Fiction.
 -- bug-reports:
 -- license:
@@ -24,5 +24,5 @@ executable CS2006-W04Practical
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.14 && <4.15
-  -- hs-source-dirs:
+  hs-source-dirs:      ., src
   default-language:    Haskell2010

@@ -33,6 +33,7 @@ action "go" "inside" = Just (Go In)
 action "go" "out" = Just (Go Out)
 action "go" "outside" = Just (Go Out)
 action "get" "mug" = Just (Get mug)
+action "get" "milk" = Just (Get milk)
 action "get" "coffee mug" = Just (Get mug)
 action "get" "toothbrush" = Just (Get toothbrush)
 action "get" "pot" = Just (Get coffeepot)
@@ -44,6 +45,7 @@ action "drop" "pot" = Just (Drop coffeepot)
 action "drop" "torch" = Just (Drop torch)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
+action "examine" "latte" = Just (Examine milkMug)
 action "examine" "toothbrush" = Just (Examine toothbrush)
 action "examine" "coffee" = Just (Examine fullmug)
 action "examine" "coffeepot" = Just (Examine coffeepot)
@@ -290,8 +292,13 @@ open obj state
             rmid = "hall"
             rmdata = (Room openedhall openedexits [])
 
-combine :: Object -> Object -> GameData -> (GameData, String)
-combine obj obj2 gd = (gd, "OK")
+combine :: Object -> Object -> GameData -> (GameData, String) -- #comment me later
+combine obj obj2 state
+   | carrying state fullmug && (carrying state milk) = (state'', "OK")
+   | otherwise = (state, "You can not combine these!")
+        where
+            state' = state {inventory = filter (/= fullmug) (inventory state) ++ [milkMug]}
+            state'' = state' {inventory = filter (/= milk) (inventory state') ++ [emptyMilk]}
 
 
 {- Don't update the game state, just list what the player is carrying -}

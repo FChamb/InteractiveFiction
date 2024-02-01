@@ -5,7 +5,7 @@ cabal-version:       >=1.10
 
 name:                CS2006-W04Practical
 version:             0.1.0.0
--- synopsis:
+synopsis:            A simple text based interface game.
 description:         Implementation of the first CS2006 Practical, Interactive Fiction.
 -- bug-reports:
 -- license:

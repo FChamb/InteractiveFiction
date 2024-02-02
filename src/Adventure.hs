@@ -71,8 +71,10 @@ repl state = do
                     Nothing -> do outputStrLn "Enter a command: "
                                   repl state
 
+-- outputStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
+
 main :: IO ()
-main = do outputStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
+main = do
           runInputT defaultSettings (repl initState)
           return ()
 

@@ -23,6 +23,7 @@ actions "open"    = Just open
 actions _         = Nothing
 -}
 
+
 action :: String -> String -> Maybe Command
 action "go" "north" = Just (Go North)
 action "go" "east" = Just (Go East)

@@ -37,7 +37,13 @@ makeWinMessage gd = winMessage
 
 
 process :: GameData -> [String] -> (GameData, String)
-process state [cmd,arg]      = case action cmd arg of
+process state ["save", arg] = let
+    _ = save state arg
+    in (state, "SAVE")
+process state ["load", arg] = let
+    loadedState = load arg
+    in (loadedState, "LOAD")
+process state [cmd,arg] = case action cmd arg of
                                  Just fn -> completeAction fn state
                                  Nothing -> (state, "I don't understand")
 process state [cmd]          = case rule cmd of
@@ -65,3 +71,9 @@ main :: IO ()
 main = do putStr "[Game start! Type help for list of commands and quit to exit.]\n\n"
           repl initState
           return ()
+
+save :: GameData -> String -> IO ()
+save gd filename = putStrLn "saving lol"
+
+load :: String -> GameData
+load filename = dummyGd where dummyGd = GameData "bedroom" gameworld [] False False False False False False False False False False

@@ -7,6 +7,8 @@ import Control.Monad
 import System.IO
 import System.Exit
 
+import System.Console.Haskeline
+
 makeWinMessage :: GameData -> String
 makeWinMessage gd = winMessage
    where
@@ -54,26 +56,44 @@ process state [cmd,arg,arg'] = case action2 cmd arg arg' of
                                  Nothing -> (state, "I don't understand")
 process state _ = (state, "I don't understand")
 
-repl :: GameData -> IO GameData
+repl :: GameData -> InputT IO GameData
 repl state | finished state = return state
 repl state = do 
-                if (lightOn state || torchLightOn state) then print state else putStr "You cannot see anything, the lights are off.\n"
-                putStr "What now? "
-                hFlush stdout
-                cmd <- getLine
-                let (state', msg) = process state (words cmd)
-                putStrLn msg
-                if (won state') then do putStr (makeWinMessage state')
-                                        return state'
-                               else repl state'
+                if (lightOn state || torchLightOn state) then outputStrLn (show state) else outputStrLn "You cannot see anything, the lights are off.\n"
+                outputStrLn "What now? "
+                cmd <- getInputLine "% "
+                case cmd of
+                    Just fn -> do let (state', msg) = process state (words fn)
+                                  outputStrLn msg
+                                  if (won state') then do outputStrLn (makeWinMessage state')
+                                                          return state'
+                                  else repl state'
+                    Nothing -> do outputStrLn "Enter a command: "
+                                  repl state
 
 main :: IO ()
-main = do putStr "[Game start! Type help for list of commands and quit to exit.]\n\n"
-          repl initState
+main = do outputStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
+          runInputT defaultSettings (repl initState)
           return ()
 
 save :: GameData -> String -> IO ()
-save gd filename = putStrLn "saving lol"
+save gd filename = undefined
+
+{-
+    do writeFile "../gameStates/filename" (encode gd)
+    return()
+-}
 
 load :: String -> GameData
-load filename = dummyGd where dummyGd = GameData "bedroom" gameworld [] False False False False False False False False False False
+load filename = undefined
+
+{-
+    do gameData <- readFile "../gameStates/filename"
+    let new = decode gameData
+    case new of
+        Nothing ->
+            error "Invalid file format"
+        Just n -> repl n
+-}
+
+  -- dummyGd where dummyGd = GameData "bedroom" gameworld [] False False False False False False False False False False

@@ -3,6 +3,7 @@ module Actions where
 import World
 import Parsing
 import Data.Maybe
+-- import Test.QuickCheck
 
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
@@ -38,10 +39,12 @@ action "get" "coffee mug" = Just (Get mug)
 action "get" "toothbrush" = Just (Get toothbrush)
 action "get" "pot" = Just (Get coffeepot)
 action "get" "coffeepot" = Just (Get coffeepot)
+action "get" "torch" = Just (Get emptyTorch)
 action "get" "torch" = Just (Get torch)
 action "drop" "mug" = Just (Drop mug)
 action "drop" "toothbrush" = Just (Drop toothbrush)
 action "drop" "pot" = Just (Drop coffeepot)
+action "drop" "torch" = Just (Drop emptyTorch)
 action "drop" "torch" = Just (Drop torch)
 action "pour" "coffee" = Just (Pour coffeepot)
 action "examine" "mug" = Just (Examine mug)
@@ -63,7 +66,10 @@ action _ _ = Nothing
 action2 :: String -> String -> String -> Maybe Command
 action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
 action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
-
+action2 "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
+action2 "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
+action2 "combine" "eggs" "bread" = Just (Combine bread eggs)
+action2 "combine" "bread" "eggs" = Just (Combine eggs bread)
 action2 _ _ _ = Nothing
 
 completeAction :: Command -> GameData -> (GameData, String)
@@ -255,9 +261,11 @@ drink obj state
 
 use :: Action
 use obj state
-    | (carrying state toothbrush) = (toothState', "OK")
-    | (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
-    | (obj == shower) && (getRoomData state == bathroom) = (showerState, "OK")
+    | (obj == toothbrush) && (location_id state == "bathroom") && (carrying state toothbrush) = (toothState', "OK")
+    | (obj == toothbrush) && (location_id state == "bathroom") = (state, "What are you gonna brush your teeth with, your fingers?")
+    | (obj == toothbrush) && (carrying state toothbrush) = (state, "You need to be at the bathroom sink to brush your teeth, you animal!")
+    | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
+    | (obj == shower) && (location_id state == "bathroom") = (showerState, "OK")
     | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
     | otherwise = (state, "You can not use that right now!")
         where
@@ -290,7 +298,7 @@ open obj state
         where
             state' = updateRoom state rmid rmdata
             rmid = "hall"
-            rmdata = (Room openedhall openedexits [])
+            rmdata = (Room openedhall openedexits [] [])
 
 tripleSearch :: Object -> Object -> [(Object, Object, [Object])] -> [Object]
 tripleSearch _ _ [] = []

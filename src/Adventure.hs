@@ -58,10 +58,11 @@ process state _ = (state, "I don't understand")
 
 repl :: GameData -> InputT IO GameData
 repl state | finished state = return state
-repl state = do 
+repl state = do
                 if (lightOn state || torchLightOn state) then outputStrLn (show state) else outputStrLn "You cannot see anything, the lights are off.\n"
                 outputStrLn "What now? "
-                cmd <- getInputLine "% "
+                cmd <- getInputLine ">> "
+                outputStrLn "------------------------------------------------------------------\n"
                 case cmd of
                     Just fn -> do let (state', msg) = process state (words fn)
                                   outputStrLn msg
@@ -71,10 +72,8 @@ repl state = do
                     Nothing -> do outputStrLn "Enter a command: "
                                   repl state
 
--- outputStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
-
 main :: IO ()
-main = do
+main = do putStr "------------------------------------------------------------------\n[Game start! Type help for list of commands and quit to exit.]\n"
           runInputT defaultSettings (repl initState)
           return ()
 

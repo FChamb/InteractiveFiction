@@ -65,10 +65,10 @@ repl state = do
                 outputStrLn "------------------------------------------------------------------\n"
                 case cmd of
                     Just fn -> case words fn of
-                     ["save", filename] -> do liftIO (save state filename)
+                     ["SAVE", filename] -> do liftIO (save state filename)
                                               repl state
 
-                     ["load", filename] -> do processLoad state (load filename)
+                     ["LOAD", filename] -> do processLoad state (load filename)
 
                      otherCommand -> do
                            let (state', msg) = process state otherCommand
@@ -87,7 +87,7 @@ main = do putStr "--------------------------------------------------------------
           return ()
 
 save :: GameData -> String -> IO ()
-save gd filename = do writeFile ("../saves/" ++ filename) (show gd)
+save gd filename = do writeFile ("saves/" ++ filename) (show gd)
                       putStrLn ("Saved game! Saved to saves/" ++ filename ++ ". \n")
                       return ()
 
@@ -104,7 +104,17 @@ processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
 
 
 load :: String -> IO (GameData, Bool)
-load filename = return (initState, True)
+load filename = do let file = (readFile ("saves/" ++ filename))
+                   let loadData = readGameData fileString
+                   case loadData of
+                       Just gameData -> return (loadData, True)
+                       Nothing       -> return (initState, False)
+
+
+
+
+
+  --return (initState, True)
 {-
    how to complete:
    1) read string from saves/filename: do fileString <- readFile "../saves/" ++ filename

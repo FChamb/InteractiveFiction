@@ -8,6 +8,8 @@ import System.IO
 import System.Exit
 
 import System.Console.Haskeline
+import Control.Monad.IO.Class (liftIO)
+import Prelude
 
 makeWinMessage :: GameData -> String
 makeWinMessage gd = winMessage
@@ -39,12 +41,6 @@ makeWinMessage gd = winMessage
 
 
 process :: GameData -> [String] -> (GameData, String)
-process state ["save", arg] = let
-    _ = save state arg
-    in (state, "SAVE")
-process state ["load", arg] = let
-    loadedState = load arg
-    in (loadedState, "LOAD")
 process state [cmd,arg] = case action cmd arg of
                                  Just fn -> completeAction fn state
                                  Nothing -> (state, "I don't understand")
@@ -59,43 +55,58 @@ process state _ = (state, "I don't understand")
 repl :: GameData -> InputT IO GameData
 repl state | finished state = return state
 repl state = do 
-                if (lightOn state || torchLightOn state) then outputStrLn (show state) else outputStrLn "You cannot see anything, the lights are off.\n"
+                if (lightOn state || torchLightOn state) then outputStrLn (show (getRoomData state)) else outputStrLn "You cannot see anything, the lights are off.\n"
                 outputStrLn "What now? "
                 cmd <- getInputLine "% "
                 case cmd of
-                    Just fn -> do let (state', msg) = process state (words fn)
-                                  outputStrLn msg
-                                  if (won state') then do outputStrLn (makeWinMessage state')
-                                                          return state'
-                                  else repl state'
+                    Just fn -> case words fn of
+                     ["save", filename] -> do liftIO (save state filename)
+                                              repl state
+
+                     ["load", filename] -> do processLoad state (load filename)
+
+                     otherCommand -> do
+                           let (state', msg) = process state otherCommand
+                           outputStrLn msg
+                           if won state'
+                              then do
+                                 outputStrLn (makeWinMessage state')
+                                 return state'
+                              else repl state'
                     Nothing -> do outputStrLn "Enter a command: "
                                   repl state
 
--- outputStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
-
 main :: IO ()
 main = do
+          putStrLn "[Game start! Type help for list of commands and quit to exit.]\n\n"
           runInputT defaultSettings (repl initState)
           return ()
 
 save :: GameData -> String -> IO ()
-save gd filename = undefined
+save gd filename = do writeFile ("../saves/" ++ filename) (show gd)
+                      putStrLn ("Saved game! Saved to saves/" ++ filename ++ ". \n")
+                      return ()
 
+
+processLoad :: GameData -> IO (GameData, Bool) -> InputT IO GameData
+processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
+  -- now you can use loadedGameData within io monad (seemingly the only way to convert io gamedata to useable gamedata)
+                             case success of
+                                 True  -> do liftIO $ putStrLn "Loaded successfully.\n"
+                                             repl loadedGameData
+                                 False -> do liftIO $ putStrLn "Error while loading. Continuing game from previous state.\n"
+                                             repl gd
+                             
+
+
+load :: String -> IO (GameData, Bool)
+load filename = return (initState, True)
 {-
-    do writeFile "../gameStates/filename" (encode gd)
-    return()
+   how to complete:
+   1) read string from saves/filename: do fileString <- readFile "../saves/" ++ filename
+   2) [ implement working readGameData function which can convert a gamedata string representation to gamedata (output Maybe GameData) ]
+   3) let loadData = readGameData fileString
+   3) case loadData of
+         Just gameData  -> return (loadData, True)
+         Nothing        -> return (initState, False)
 -}
-
-load :: String -> GameData
-load filename = undefined
-
-{-
-    do gameData <- readFile "../gameStates/filename"
-    let new = decode gameData
-    case new of
-        Nothing ->
-            error "Invalid file format"
-        Just n -> repl n
--}
-
-  -- dummyGd where dummyGd = GameData "bedroom" gameworld [] False False False False False False False False False False

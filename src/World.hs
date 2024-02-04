@@ -1,7 +1,7 @@
 module World where
 
-import Data.List (intersperse)
-
+import Data.List
+import Text.Read (readMaybe)
 
 data Object = Obj { obj_name :: String,
                     obj_longname :: String,
@@ -47,6 +47,39 @@ data GameData = GameData { location_id :: String, -- where player is
                            finished :: Bool -- set to True at the end
                          }
 
+instance Show GameData where
+    show (GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin) =
+        "GameData \"" ++ locId ++ "\" " ++ (formatGameworld wrld) ++ " " ++ formatInv inv ++
+        " " ++ show p ++ " " ++ show c ++ " " ++ show e ++ " " ++ show b ++
+        " " ++ show sh ++ " " ++ show l ++ " " ++ show tl ++ " " ++ show lOnEv ++
+        " " ++ show tOnEv ++ " " ++ show fin
+
+-- shenanigans START
+
+{-instance Read GameData where
+   read inputString = GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin
+      where
+         locId = match.group(0)
+         wrld = [(item[0], item[1]) for item in match1.group(0)]
+         inv = [item for item in match1.group(1)]
+         p = _
+         c = _
+         e = _
+         b = _
+         sh = _
+         l = _
+         tl = _
+         lOnEv = _ 
+         tOnEv = _
+         fin = _
+         --match patterns
+         match = re.search(r'"([^\"]+)"', inputString) --for anything in double quotes
+         match1 = re.search(r'\[.*\]', inputString) --for anything encased in square brackets-}
+
+-- GameData "bedroom" [("bedroom", bedroom), ("bathroom", bathroom), ("kitchen", kitchen), ("hall", hall), ("street", street)] [] False False False False False False False False False False
+
+-- shenanigans END
+
 won :: GameData -> Bool
 won gd = location_id gd == "street"
 
@@ -61,9 +94,6 @@ instance Show Room where
              showBoxes xs = "There is also: " ++ showBoxes' xs
              showBoxes' [x] = show x
              showBoxes' (x:xs) = show x ++ ", " ++ showBoxes' xs
-
-instance Show GameData where
-    show gd = show (getRoomData gd)
 
 -- Things which do something to an object and update the game state
 type Action = Object -> GameData -> (GameData, String)
@@ -146,3 +176,15 @@ initState = GameData "bedroom" gameworld [] False False False False False False 
 
 getRoomData :: GameData -> Room
 getRoomData gd = maybe undefined id (lookup (location_id gd) (world gd))
+
+{-readGameData :: String -> Maybe GameData
+readGameData str = readMaybe str-}
+
+formatRoomPair :: (String, Room) -> String
+formatRoomPair (name, room) = "(\"" ++ name ++ "\", " ++ name ++ ")"
+
+formatGameworld :: [(String, Room)] -> String
+formatGameworld rooms = "[" ++ intercalate ", " (map formatRoomPair rooms) ++ "]"
+
+formatInv:: [Object] -> String
+formatInv xs = "[" ++ intercalate ", " (map obj_name xs) ++ "]"

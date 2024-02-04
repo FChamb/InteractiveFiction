@@ -12,18 +12,6 @@ data Command = Go Direction   | Get Object   |
                LightsOn Object| Combine Object Object
    deriving Show
 
-{-
-actions :: String -> Maybe Action
-actions "go"      = Just go
-actions "get"     = Just get
-actions "drop"    = Just put
-actions "pour"    = Just pour
-actions "examine" = Just examine
-actions "drink"   = Just drink
-actions "open"    = Just open
-actions _         = Nothing
--}
-
 action :: String -> String -> Maybe Command
 action "go" "north" = Just (Go North)
 action "go" "east" = Just (Go East)
@@ -41,8 +29,11 @@ action "get" "pot" = Just (Get coffeepot)
 action "get" "coffeepot" = Just (Get coffeepot)
 action "get" "torch" = Just (Get emptyTorch)
 action "get" "torch" = Just (Get torch)
+action "get" "latte" = Just (Get milkyCoffeeMug)
+action "get" "shower" = Just (Get shower)
 action "drop" "mug" = Just (Drop mug)
 action "drop" "toothbrush" = Just (Drop toothbrush)
+action "drop" "latte" = Just (Drop milkyCoffeeMug)
 action "drop" "pot" = Just (Drop coffeepot)
 action "drop" "torch" = Just (Drop emptyTorch)
 action "drop" "torch" = Just (Drop torch)
@@ -196,6 +187,7 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state
+    | obj == shower = (state, "You can't pick up a whole shower.")
     | objectHere obj (getRoomData state) = (state'', "OK")
     | otherwise = (state, "That item is not in this room!")
         where
@@ -259,6 +251,8 @@ drink obj state
             state' = state {caffeinated = True}
             state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
 
+{- Used to use various objects to implement more puzzles for the player. -}
+
 use :: Action
 use obj state
     | (obj == toothbrush) && (location_id state == "bathroom") && (carrying state toothbrush) = (toothState', "OK")
@@ -273,7 +267,10 @@ use obj state
             toothState' = toothState {inventory = filter (/= toothbrush) (inventory state) ++ [usedToothbrush]}
             showerState = state {showered = True}
 
-switchLight :: Action -- #comment me and use later
+{-Turn the light on: game can be played with the lights off but no descriptions will be given.
+If the player never turns on the light but completes the game they get an achievement. -}
+
+switchLight :: Action 
 switchLight obj state
     | (obj == lightswitch) = (lightState, "OK")
     | (obj == torch) && (carrying state torch) = (torchState, "OK")
@@ -307,7 +304,11 @@ tripleSearch x y ((a,a1,b):xs)
     | (y == a && x == a1) = b
     | otherwise = tripleSearch x y xs
 
-combine :: Object -> Object -> GameData -> (GameData, String) -- #comment me later
+{- Combine is a kind of modified action taking two objects as input, removing both of them from the player's inventory and 
+adding the outputs to their inventory. It uses a list of triples where the first two values are the inputs (which it searches
+for in any order) and the third is a list of outputs. -}
+
+combine :: Object -> Object -> GameData -> (GameData, String)
 combine obj obj2 state
    | outcome == [] = (state, "You cannot combine these.")
    | outcome /= [] && (carrying state obj) && (carrying state obj2) = (state'', "OK")

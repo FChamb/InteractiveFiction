@@ -29,7 +29,8 @@ data Box = Box { box_name :: String,
 
 instance Show Box where
    show box
-      | opened box = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
+      | opened box && not (items box == []) = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
+      | items box == [] = box_name box ++ " (empty)"
       | otherwise = box_name box ++ " (closed)"
 
 data GameData = GameData { location_id :: String, -- where player is
@@ -54,31 +55,26 @@ instance Show GameData where
         " " ++ show sh ++ " " ++ show l ++ " " ++ show tl ++ " " ++ show lOnEv ++
         " " ++ show tOnEv ++ " " ++ show fin
 
--- shenanigans START
+{-
+readGameData :: String -> Maybe GameData
+readGameData inputString = GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin
+   where
+      locId = _ --get first string encased in quotes
+      wrld = _ -- get [(String,Room)] string and format as [(String,Room)]
+      inv = _ -- get [Object] string and format as [Object]
+      p = _ -- first formatted bool
+      c = _ -- second
+      e = _ -- etc
+      b = _
+      sh = _
+      l = _
+      tl = _
+      lOnEv = _ 
+      tOnEv = _
+      fin = _ 
+-}
 
-{-instance Read GameData where
-   read inputString = GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin
-      where
-         locId = match.group(0)
-         wrld = [(item[0], item[1]) for item in match1.group(0)]
-         inv = [item for item in match1.group(1)]
-         p = _
-         c = _
-         e = _
-         b = _
-         sh = _
-         l = _
-         tl = _
-         lOnEv = _ 
-         tOnEv = _
-         fin = _
-         --match patterns
-         match = re.search(r'"([^\"]+)"', inputString) --for anything in double quotes
-         match1 = re.search(r'\[.*\]', inputString) --for anything encased in square brackets-}
-
--- GameData "bedroom" [("bedroom", bedroom), ("bathroom", bathroom), ("kitchen", kitchen), ("hall", hall), ("street", street)] [] False False False False False False False False False False
-
--- shenanigans END
+-- example: GameData "bedroom" [("bedroom", bedroom), ("bathroom", bathroom), ("kitchen", kitchen), ("hall", hall), ("street", street)] [] False False False False False False False False False False
 
 won :: GameData -> Bool
 won gd = location_id gd == "street"
@@ -124,9 +120,13 @@ milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant i
 eggs           = Obj "eggs" "a box of eggs" "A box with some eggs. Very droppable."
 bread          = Obj "bread" "a loaf of bread" "Bread, with an unknown amount or lack thereof of gluten."
 eggyBread      = Obj "eggy bread" "a soggy, eggy loaf of bread" "Like french toast, if you squint. It's raw, but I'm sure that's fine."
+frenchToast    = Obj "french toast" "a decent meal of french toast" "A decent breakfast. I'm proud of you!"
+foodPoisoning  = Obj "food poisoning" "food poisoning" "You know what you did."
+satisfaction   = Obj "satisfaction" "a sense of satisfaction" "Look at you, cooking a proper breakfast. Well done!"
+oven           = Obj "oven" "an oven" "A nice little oven. It deserves more love."
 
 kitchenCupboard :: Box
-kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] True
+kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] False
 
 bedroom, bathroom, kitchen, hall, street :: Room
 
@@ -144,7 +144,7 @@ bathroom = Room "You are in the bathroom. There is a shower and sink."
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
                 Exit West "To the west is a hallway. " "hall"]
-               [coffeepot, emptyTorch, milk]
+               [coffeepot, emptyTorch, milk, oven]
                [kitchenCupboard]
 
 hall = Room "You are in the hallway. The front door is closed. "

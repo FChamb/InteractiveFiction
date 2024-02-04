@@ -100,7 +100,17 @@ processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
 
 
 load :: String -> IO (GameData, Bool)
-load filename = return (initState, True)
+load filename = do let file = (readFile ("saves/" ++ filename))
+                   let loadData = readGameData fileString
+                   case loadData of
+                       Just gameData -> return (loadData, True)
+                       Nothing       -> return (initState, False)
+
+
+
+
+
+  --return (initState, True)
 {-
    how to complete:
    1) read string from saves/filename: do fileString <- readFile "../saves/" ++ filename

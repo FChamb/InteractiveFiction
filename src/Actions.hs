@@ -34,17 +34,17 @@ action gd "go" "outside" = Just (Go Out)
 action gd "get" "mug"
     | checkObj milkyCoffeeMug gd = Just (Get milkyCoffeeMug)
     | checkObj fullmug gd = Just (Get fullmug)
-    | checkObj mug gd = Just (Get mug)
+    | otherwise = Just (Get mug)
 action gd "get" "coffee" = Just (Get fullmug)
 action gd "get" "milk" = Just (Get milk)
 action gd "get" "toothbrush"
     | checkObj toothbrush gd = Just (Get toothbrush)
-    | checkObj usedToothbrush gd = Just (Get usedToothbrush)
+    | otherwise = Just (Get usedToothbrush)
 action gd "get" "pot" = Just (Get coffeepot)
 action gd "get" "coffeepot" = Just (Get coffeepot)
 action gd "get" "torch"
-    | checkObj torch gd = Just (Drop torch)
-    | checkObj emptyTorch gd = Just (Drop emptyTorch)
+    | checkObj torch gd = Just (Get torch)
+    | otherwise = Just (Get emptyTorch)
 action gd "get" "shower" = Just (Get shower)
 action gd "get" "batteries" = Just (Get batteries)
 action gd "get" "eggs" = Just (Get eggs)
@@ -54,17 +54,17 @@ action gd "get" "oven" = Just (Get oven)
 action gd "drop" "mug"
     | checkObj milkyCoffeeMug gd = Just (Drop milkyCoffeeMug)
     | checkObj fullmug gd = Just (Drop fullmug)
-    | checkObj mug gd = Just (Drop mug)
+    | otherwise = Just (Drop mug)
 action gd "drop" "coffee" = Just (Drop fullmug)
 action gd "drop" "milk" = Just (Drop milk)
 action gd "drop" "toothbrush"
     | checkObj toothbrush gd = Just (Drop toothbrush)
-    | checkObj usedToothbrush gd = Just (Drop usedToothbrush)
+    | otherwise = Just (Drop usedToothbrush)
 action gd "drop" "pot" = Just (Drop coffeepot)
 action gd "drop" "coffeepot" = Just (Drop coffeepot)
 action gd "drop" "torch"
     | checkObj torch gd = Just (Drop torch)
-    | checkObj emptyTorch gd = Just (Drop emptyTorch)
+    | otherwise = Just (Drop emptyTorch)
 action gd "drop" "batteries" = Just (Drop batteries)
 action gd "drop" "eggs" = Just (Drop eggs)
 action gd "drop" "bread" = Just (Drop bread)
@@ -74,16 +74,16 @@ action gd "pour" "coffee" = Just (Pour coffeepot)
 action gd "examine" "mug"
     | checkObj milkyCoffeeMug gd = Just (Examine milkyCoffeeMug)
     | checkObj fullmug gd = Just (Examine fullmug)
-    | checkObj mug gd = Just (Examine mug)
+    | otherwise = Just (Examine mug)
 action gd "examine" "coffee" = Just (Examine fullmug)
 action gd "examine" "toothbrush"
     | checkObj toothbrush gd = Just (Examine toothbrush)
-    | checkObj usedToothbrush gd = Just (Examine usedToothbrush)
+    | otherwise = Just (Examine usedToothbrush)
 action gd "examine" "coffeepot" = Just (Examine coffeepot)
 action gd "examine" "pot" = Just (Examine coffeepot)
 action gd "examine" "torch"
     | checkObj torch gd = Just (Examine torch)
-    | checkObj emptyTorch gd = Just (Examine emptyTorch)
+    | otherwise = Just (Examine emptyTorch)
 action gd "examine" "batteries" = Just (Examine batteries)
 action gd "examine" "shower" = Just (Examine shower)
 action gd "examine" "lightswitch" = Just (Examine lightswitch)
@@ -115,44 +115,56 @@ action _ _ _ = Nothing
 Action2 type which translates the user provided input of length
 three into valid Command Data types above.
 -}
-action2 :: String -> String -> String -> Maybe Command
-action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
-action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
-action2 "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
-action2 "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
-action2 "combine" "eggs" "bread" = Just (Combine bread eggs)
-action2 "combine" "bread" "eggs" = Just (Combine eggs bread)
+action2 :: GameData -> String -> String -> String -> Maybe Command
+action2 gd "combine" "coffee" "milk" = Just (Combine fullmug milk)
+action2 gd "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+action2 gd "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
+action2 gd "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
+action2 gd "combine" "eggs" "bread" = Just (Combine bread eggs)
+action2 gd "combine" "bread" "eggs" = Just (Combine eggs bread)
 
 -- until parsed is fixed i'm just going to put the multiword commands here so they work
 -- #to do, make get coffee mug/mug and get torch interchangeable so they work for both items
-action2 "eat" "eggy" "bread" = Just (Eat eggyBread)
-action2 "eat" "french" "toast" = Just (Eat frenchToast)
+action2 gd "eat" "eggy" "bread" = Just (Eat eggyBread)
+action2 gd "eat" "french" "toast" = Just (Eat frenchToast)
 
-action2 "drink" "milky" "coffee" = Just (Drink milkyCoffeeMug)
+action2 gd "drink" "milky" "coffee" = Just (Drink milkyCoffeeMug)
 
-action2 "get" "empty" "milk" = Just (Get emptyMilk)
-action2 "get" "coffee" "mug" = Just (Get mug) --
-action2 "get" "coffee" "mug" = Just (Get fullmug)
-action2 "get" "used" "toothbrush" = Just (Get usedToothbrush)
-action2 "get" "milky" "coffee" = Just (Get milkyCoffeeMug)
-action2 "get" "eggy" "bread" = Just (Get eggyBread)
-action2 "get" "french" "toast" = Just (Get frenchToast)
+action2 gd "get" "empty" "milk" = Just (Get emptyMilk)
+action2 gd "get" "empty" "torch" = Just (Get emptyTorch)
+action2 gd "get" "coffee" "mug"
+    | checkObj milkyCoffeeMug gd = Just (Get milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Get fullmug)
+    | otherwise = Just (Get mug)
+action2 gd "get" "used" "toothbrush" = Just (Get usedToothbrush)
+action2 gd "get" "milky" "coffee" = Just (Get milkyCoffeeMug)
+action2 gd "get" "eggy" "bread" = Just (Get eggyBread)
+action2 gd "get" "french" "toast" = Just (Get frenchToast)
 
-action2 "drop" "empty" "milk" = Just (Drop emptyMilk)
-action2 "drop" "coffee" "mug" = Just (Drop mug) --
-action2 "drop" "used" "toothbrush" = Just (Drop usedToothbrush)
-action2 "drop" "milky" "coffee" = Just (Drop milkyCoffeeMug)
-action2 "drop" "eggy" "bread" = Just (Drop eggyBread)
-action2 "drop" "french" "toast" = Just (Drop frenchToast)
+action2 gd "drop" "empty" "milk" = Just (Drop emptyMilk)
+action2 gd "drop" "empty" "torch" = Just (Drop emptyTorch)
+action2 gd "drop" "coffee" "mug" 
+    | checkObj milkyCoffeeMug gd = Just (Drop milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Drop fullmug)
+    | otherwise = Just (Drop mug)
+action2 gd "drop" "used" "toothbrush" = Just (Drop usedToothbrush)
+action2 gd "drop" "milky" "coffee" = Just (Drop milkyCoffeeMug)
+action2 gd "drop" "eggy" "bread" = Just (Drop eggyBread)
+action2 gd "drop" "french" "toast" = Just (Drop frenchToast)
 
-action2 "examine" "milky" "coffee" = Just (Examine milkyCoffeeMug)
-action2 "examine" "empty" "milk" = Just (Examine emptyMilk)
-action2 "examine" "used" "toothbrush" = Just (Examine usedToothbrush)
-action2 "examine" "eggy" "bread" = Just (Examine eggyBread)
-action2 "examine" "french" "toast" = Just (Examine frenchToast)
-action2 "examine" "food" "poisoning" = Just (Examine foodPoisoning)
+action2 gd "examine" "milky" "coffee" = Just (Examine milkyCoffeeMug)
+action2 gd "examine" "empty" "milk" = Just (Examine emptyMilk)
+action2 gd "examine" "coffee" "mug"
+    | checkObj milkyCoffeeMug gd = Just (Examine milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Examine fullmug)
+    | otherwise = Just (Examine mug)
+action2 gd "examine" "empty" "torch" = Just (Examine emptyTorch)
+action2 gd "examine" "used" "toothbrush" = Just (Examine usedToothbrush)
+action2 gd "examine" "eggy" "bread" = Just (Examine eggyBread)
+action2 gd "examine" "french" "toast" = Just (Examine frenchToast)
+action2 gd "examine" "food" "poisoning" = Just (Examine foodPoisoning)
 
-action2 _ _ _ = Nothing
+action2 _ _ _ _ = Nothing
 
 {-
 Complete Action takes a specific command and GameData state and

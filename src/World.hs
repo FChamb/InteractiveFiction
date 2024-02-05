@@ -1,36 +1,37 @@
 module World where
 
-import Data.List (intersperse)
-
+import Data.List
+import Text.Read (readMaybe)
 
 data Object = Obj { obj_name :: String,
                     obj_longname :: String,
                     obj_desc :: String }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
-instance Show Object where
-   show obj = obj_longname obj
+showObj :: Object -> String
+showObj obj = obj_longname obj
 
 data Exit = Exit { exit_dir :: Direction,
                    exit_desc :: String,
                    room :: String }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
 data Room = Room { room_desc :: String,
                    exits :: [Exit],
                    objects :: [Object],
                    containers :: [Box] }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
 data Box = Box { box_name :: String,
                   items :: [Object],
                   opened :: Bool }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
-instance Show Box where
-   show box
-      | opened box = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
-      | otherwise = box_name box ++ " (closed)"
+showBox :: Box -> String
+showBox box
+   | opened box && not (items box == []) = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
+   | items box == [] = box_name box ++ " (empty)"
+   | otherwise = box_name box ++ " (closed)"
 
 data GameData = GameData { location_id :: String, -- where player is
                            world :: [(String, Room)],
@@ -44,26 +45,25 @@ data GameData = GameData { location_id :: String, -- where player is
                            torchLightOn :: Bool, -- turned on torch
                            lightsOnEver :: Bool, -- to track if the player ever turned the lights on (achievement)
                            torchOnEver :: Bool, -- to track if the player ever turned the torch on (achievement)
+                           barista :: Bool, --t to track if the player made a "fancy" coffee (achievement)
                            finished :: Bool -- set to True at the end
                          }
+   deriving (Show, Read)
 
 won :: GameData -> Bool
 won gd = location_id gd == "street"
 
-instance Show Room where
-    show (Room desc exits objs boxes) = desc ++ "\n" ++ concatMap exit_desc exits ++
-                                  showInv objs ++ showBoxes boxes
-       where showInv [] = ""
-             showInv xs = "\n\nYou can see: " ++ showInv' xs
-             showInv' [x] = show x ++ ". "
-             showInv' (x:xs) = show x ++ ", " ++ showInv' xs
-             showBoxes [] = ""
-             showBoxes xs = "There is also: " ++ showBoxes' xs
-             showBoxes' [x] = show x
-             showBoxes' (x:xs) = show x ++ ", " ++ showBoxes' xs
-
-instance Show GameData where
-    show gd = show (getRoomData gd)
+showRoom :: Room -> String
+showRoom (Room desc exits objs boxes) = desc ++ "\n" ++ concatMap exit_desc exits ++
+                              showInv objs ++ showBoxes boxes
+   where showInv [] = ""
+         showInv xs = "\n\nYou can see: " ++ showInv' xs
+         showInv' [x] = showObj x ++ ". "
+         showInv' (x:xs) = showObj x ++ ", " ++ showInv' xs
+         showBoxes [] = ""
+         showBoxes xs = "There is also: " ++ showBoxes' xs
+         showBoxes' [x] = showBox x
+         showBoxes' (x:xs) = showBox x ++ ", " ++ showBoxes' xs
 
 -- Things which do something to an object and update the game state
 type Action = Object -> GameData -> (GameData, String)
@@ -73,7 +73,7 @@ type Rule = GameData -> (GameData, String)
 
 -- Things which define directions
 data Direction = North | East | West | South | Out | In
-   deriving (Show, Eq)
+   deriving (Show, Read, Eq)
 
 recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk]), (emptyTorch, batteries, [torch]), (eggs, bread, [eggyBread])]
 
@@ -94,9 +94,13 @@ milk           = Obj "milk" "a jug of milk" "It's unclear what animal or plant i
 eggs           = Obj "eggs" "a box of eggs" "A box with some eggs. Very droppable."
 bread          = Obj "bread" "a loaf of bread" "Bread, with an unknown amount or lack thereof of gluten."
 eggyBread      = Obj "eggy bread" "a soggy, eggy loaf of bread" "Like french toast, if you squint. It's raw, but I'm sure that's fine."
+frenchToast    = Obj "french toast" "a decent meal of french toast" "A decent breakfast. I'm proud of you!"
+foodPoisoning  = Obj "food poisoning" "food poisoning" "You know what you did."
+satisfaction   = Obj "satisfaction" "a sense of satisfaction" "Look at you, cooking a proper breakfast. Well done!"
+oven           = Obj "oven" "an oven" "A nice little oven. It deserves more love."
 
 kitchenCupboard :: Box
-kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] True
+kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] False
 
 bedroom, bathroom, kitchen, hall, street :: Room
 
@@ -114,7 +118,7 @@ bathroom = Room "You are in the bathroom. There is a shower and sink."
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
                 Exit West "To the west is a hallway. " "hall"]
-               [coffeepot, emptyTorch, milk]
+               [coffeepot, emptyTorch, milk, oven]
                [kitchenCupboard]
 
 hall = Room "You are in the hallway. The front door is closed. "
@@ -140,9 +144,21 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False False False False False False False False
+initState = GameData "bedroom" gameworld [] False False False False False False False False False False False
 
 {- Return the room the player is currently in. -}
 
 getRoomData :: GameData -> Room
 getRoomData gd = maybe undefined id (lookup (location_id gd) (world gd))
+
+{-readGameData :: String -> Maybe GameData
+readGameData str = readMaybe str-}
+
+formatRoomPair :: (String, Room) -> String
+formatRoomPair (name, room) = "(\"" ++ name ++ "\", " ++ name ++ ")"
+
+formatGameworld :: [(String, Room)] -> String
+formatGameworld rooms = "[" ++ intercalate ", " (map formatRoomPair rooms) ++ "]"
+
+formatInv:: [Object] -> String
+formatInv xs = "[" ++ intercalate ", " (map obj_name xs) ++ "]"

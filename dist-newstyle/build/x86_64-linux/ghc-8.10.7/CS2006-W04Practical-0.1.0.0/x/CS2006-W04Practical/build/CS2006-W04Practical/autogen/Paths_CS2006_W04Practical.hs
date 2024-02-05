@@ -29,12 +29,12 @@ version :: Version
 version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "/home/fc84/.cabal/bin"
-libdir     = "/home/fc84/.cabal/lib/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0-inplace-CS2006-W04Practical"
-dynlibdir  = "/home/fc84/.cabal/lib/x86_64-linux-ghc-8.10.7"
-datadir    = "/home/fc84/.cabal/share/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0"
-libexecdir = "/home/fc84/.cabal/libexec/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0"
-sysconfdir = "/home/fc84/.cabal/etc"
+bindir     = "/home/rb316/.cabal/bin"
+libdir     = "/home/rb316/.cabal/lib/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0-inplace-CS2006-W04Practical"
+dynlibdir  = "/home/rb316/.cabal/lib/x86_64-linux-ghc-8.10.7"
+datadir    = "/home/rb316/.cabal/share/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0"
+libexecdir = "/home/rb316/.cabal/libexec/x86_64-linux-ghc-8.10.7/CS2006-W04Practical-0.1.0.0"
+sysconfdir = "/home/rb316/.cabal/etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "CS2006_W04Practical_bindir") (\_ -> return bindir)

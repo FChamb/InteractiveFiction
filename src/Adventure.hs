@@ -60,7 +60,7 @@ process state [cmd,arg] = case action state cmd arg of
 process state [cmd]          = case rule cmd of
                                  Just fn -> fn state
                                  Nothing -> (state, "I don't understand.")
-process state [cmd,arg,arg'] = case action2 cmd arg arg' of
+process state [cmd,arg,arg'] = case action2 state cmd arg arg' of
                                  Just fn -> completeAction fn state
                                  Nothing -> (state, "I don't understand.")
 process state _ = (state, "I don't understand.")

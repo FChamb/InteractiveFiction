@@ -47,7 +47,7 @@ makeWinMessage gd = winMessage
          | otherwise = cleanMessage ++ eatMessage
       score = length (filter (==True) [brushed gd, eaten gd, showered gd])
       endWinMessage = "\nNow go to your lectures..."
-      winMessage = startWinMessage ++ gameMessage ++ foodMessage ++ lightMessage ++ endWinMessage
+      winMessage = startWinMessage ++ gameMessage ++ foodMessage ++ baristaMessage ++ lightMessage ++ endWinMessage
 
 {- Given a game state, and user input (as a list of words) return a 
    new game state and a message for the user.
@@ -81,10 +81,10 @@ repl state = do
                 outputStrLn "------------------------------------------------------------------\n"
                 case cmd of
                     Just fn -> case words fn of
-                     ["SAVE", filename] -> do liftIO (save state filename)
+                     ["save", filename] -> do liftIO (save state filename)
                                               repl state
 
-                     ["LOAD", filename] -> do processLoad state (load filename)
+                     ["load", filename] -> do processLoad state (load filename)
 
                      otherCommand -> do
                            let (state', msg) = process state otherCommand
@@ -111,15 +111,13 @@ Save takes a game data state and a filename. Using writeFile, the
 game data is converted to a string using show and then written to the
 provided file name is the saves folder.
 -}
+
 save :: GameData -> String -> IO ()
 save gd filename = do writeFile ("saves/" ++ filename) (show gd)
                       putStrLn ("Saved game! Saved to saves/" ++ filename ++ ". \n")
                       return ()
                       -- # maybe edit this so we give our own error message if the save doesn't work (currently ghc gives and exception and exits the game immediately)
 
-{-
-
--}
 processLoad :: GameData -> IO (GameData, Bool) -> InputT IO GameData
 processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
   -- now you can use loadedGameData within io monad (seemingly the only way to convert io gamedata to useable gamedata)

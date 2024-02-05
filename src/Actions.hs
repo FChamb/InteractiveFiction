@@ -93,7 +93,9 @@ action gd "examine" "bread" = Just (Examine bread)
 action gd "examine" "satisfaction" = Just (Examine satisfaction)
 action gd "examine" "oven" = Just (Examine oven)
 
-action gd "drink" "coffee" = Just (Drink fullmug)
+action gd "drink" "coffee"
+    | checkObj milkyCoffeeMug gd = Just (Drink milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Drink fullmug)
 
 action gd "eat" "egg" = Just (Eat eggs)
 action gd "eat" "eggs" = Just (Eat eggs)

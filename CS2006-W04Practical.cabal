@@ -9,7 +9,7 @@ synopsis:            A simple text based interface game.
 description:         Implementation of the first CS2006 Practical, Interactive Fiction.
 -- bug-reports:
 -- license:
-license-file:        LICENSE
+-- license-file:
 author:              Finnegan Z. Chamberlain
 maintainer:          fc84@st-andrews.ac.uk
 -- copyright:
@@ -21,7 +21,7 @@ extra-source-files:
 
 executable CS2006-W04Practical
   main-is:             Adventure.hs
-  -- other-modules:
+  other-modules:       Actions, Parsing, World
   -- other-extensions:
   build-depends:
       base >= 1.0,

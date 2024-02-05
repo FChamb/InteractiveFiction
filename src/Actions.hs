@@ -358,7 +358,9 @@ drink obj state
     | carrying state obj && (poured state) = (state'', "Drank successfully - refreshing!")
     | otherwise = (state, "You can not drink right now! Did you remember to pour the coffee first?")
         where
-            state' = state {caffeinated = True}
+            state'
+               | obj == milkyCoffeeMug = state {caffeinated = True, barista = True}
+               | otherwise = state {caffeinated = True}
             state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
 
 {- Eat food (depending on what it is you may get food poisoning). Once done, also update the 'eaten' flag in the game state. -}

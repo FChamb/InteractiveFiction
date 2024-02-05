@@ -6,32 +6,32 @@ import Text.Read (readMaybe)
 data Object = Obj { obj_name :: String,
                     obj_longname :: String,
                     obj_desc :: String }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
-instance Show Object where
-   show obj = obj_longname obj
+showObj :: Object -> String
+showObj obj = obj_longname obj
 
 data Exit = Exit { exit_dir :: Direction,
                    exit_desc :: String,
                    room :: String }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
 data Room = Room { room_desc :: String,
                    exits :: [Exit],
                    objects :: [Object],
                    containers :: [Box] }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
 data Box = Box { box_name :: String,
                   items :: [Object],
                   opened :: Bool }
-   deriving Eq
+   deriving (Show, Read, Eq)
 
-instance Show Box where
-   show box
-      | opened box && not (items box == []) = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
-      | items box == [] = box_name box ++ " (empty)"
-      | otherwise = box_name box ++ " (closed)"
+showBox :: Box -> String
+showBox box
+   | opened box && not (items box == []) = box_name box ++ " (containing " ++ concat (intersperse ", " (map obj_name (items box))) ++ "). "
+   | items box == [] = box_name box ++ " (empty)"
+   | otherwise = box_name box ++ " (closed)"
 
 data GameData = GameData { location_id :: String, -- where player is
                            world :: [(String, Room)],
@@ -45,15 +45,18 @@ data GameData = GameData { location_id :: String, -- where player is
                            torchLightOn :: Bool, -- turned on torch
                            lightsOnEver :: Bool, -- to track if the player ever turned the lights on (achievement)
                            torchOnEver :: Bool, -- to track if the player ever turned the torch on (achievement)
+                           barista :: Bool, --t to track if the player made a "fancy" coffee (achievement)
                            finished :: Bool -- set to True at the end
                          }
+   deriving (Show, Read)
 
-instance Show GameData where
+-- FORMATTING FOR THIS NEEDS TO CHANGE OR WE NEED TO JUST USE BASE SHOW
+{- instance Show GameData where
     show (GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin) =
         "GameData \"" ++ locId ++ "\" " ++ (formatGameworld wrld) ++ " " ++ formatInv inv ++
         " " ++ show p ++ " " ++ show c ++ " " ++ show e ++ " " ++ show b ++
         " " ++ show sh ++ " " ++ show l ++ " " ++ show tl ++ " " ++ show lOnEv ++
-        " " ++ show tOnEv ++ " " ++ show fin
+        " " ++ show tOnEv ++ " " ++ show fin -} 
 
 {-
 readGameData :: String -> Maybe GameData
@@ -79,17 +82,17 @@ readGameData inputString = GameData locId wrld inv p c e b sh l tl lOnEv tOnEv f
 won :: GameData -> Bool
 won gd = location_id gd == "street"
 
-instance Show Room where
-    show (Room desc exits objs boxes) = desc ++ "\n" ++ concatMap exit_desc exits ++
-                                  showInv objs ++ showBoxes boxes
-       where showInv [] = ""
-             showInv xs = "\n\nYou can see: " ++ showInv' xs
-             showInv' [x] = show x ++ ". "
-             showInv' (x:xs) = show x ++ ", " ++ showInv' xs
-             showBoxes [] = ""
-             showBoxes xs = "There is also: " ++ showBoxes' xs
-             showBoxes' [x] = show x
-             showBoxes' (x:xs) = show x ++ ", " ++ showBoxes' xs
+showRoom :: Room -> String
+showRoom (Room desc exits objs boxes) = desc ++ "\n" ++ concatMap exit_desc exits ++
+                              showInv objs ++ showBoxes boxes
+   where showInv [] = ""
+         showInv xs = "\n\nYou can see: " ++ showInv' xs
+         showInv' [x] = showObj x ++ ". "
+         showInv' (x:xs) = showObj x ++ ", " ++ showInv' xs
+         showBoxes [] = ""
+         showBoxes xs = "There is also: " ++ showBoxes' xs
+         showBoxes' [x] = showBox x
+         showBoxes' (x:xs) = showBox x ++ ", " ++ showBoxes' xs
 
 -- Things which do something to an object and update the game state
 type Action = Object -> GameData -> (GameData, String)
@@ -99,7 +102,7 @@ type Rule = GameData -> (GameData, String)
 
 -- Things which define directions
 data Direction = North | East | West | South | Out | In
-   deriving (Show, Eq)
+   deriving (Show, Read, Eq)
 
 recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk]), (emptyTorch, batteries, [torch]), (eggs, bread, [eggyBread])]
 
@@ -170,7 +173,7 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False False False False False False False False
+initState = GameData "bedroom" gameworld [] False False False False False False False False False False False
 
 {- Return the room the player is currently in. -}
 

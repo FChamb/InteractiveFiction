@@ -363,7 +363,7 @@ drink :: Action
 drink obj state
     | not (obj == fullmug || obj == milkyCoffeeMug) = (state, "This is not drinkable.")
     | carrying state obj && (poured state) = (state'', "Drank successfully - refreshing!")
-    | otherwise = (state, "You can not drink right now!")
+    | otherwise = (state, "You can not drink right now! Did you remember to pour the coffee first?")
         where
             state' = state {caffeinated = True}
             state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
@@ -389,9 +389,9 @@ eat obj state
 use :: Action
 use obj state
     | (obj == toothbrush) && (location_id state == "bathroom") && (carrying state toothbrush) = (toothState', "Brushed teeth.")
+    | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
     | (obj == toothbrush) && (location_id state == "bathroom") = (state, "What are you gonna brush your teeth with, your fingers?")
     | (obj == toothbrush) && (carrying state toothbrush) = (state, "You need to be at the bathroom sink to brush your teeth, you animal!")
-    | (obj == toothbrush) && (carrying state usedToothbrush) = (state, "You've already used this toothbrush, there's no toothpaste left on it.")
     | (obj == shower) && (location_id state == "bathroom") = (showerState, "Showered successfully. Ignore the fact that the water turned black beneath you, I'm sure it's not important.")
     | (obj == shower) = (state, "...You know you have to shower... *in* the shower, right?")
     | (obj == oven) && (location_id state == "kitchen") && (carrying state eggyBread) = (frenchToastState, "Cooked French toast! Added to inventory.")

@@ -3,7 +3,6 @@ module Actions where
 import World
 import Parsing
 import Data.Maybe
---import Test.QuickCheck
 
 {-
 Data types introduced to instead of the previous
@@ -31,29 +30,6 @@ action "go" "in" = Just (Go In)
 action "go" "inside" = Just (Go In)
 action "go" "out" = Just (Go Out)
 action "go" "outside" = Just (Go Out)
-
-{-
-mug
-fullmug
-milkyCoffeeMug
-emptyMilk
-coffeepot
-emptyTorch
-torch
-batteries
-toothbrush
-usedToothbrush
-shower
-lightswitch
-milk
-eggs
-bread
-eggyBread
-frenchToast
-foodPoisoning
-satisfaction
-oven
--}
 
 action "get" "mug" = Just (Get mug)
 action "get" "coffee" = Just (Get fullmug)
@@ -163,7 +139,9 @@ action2 "examine" "food" "poisoning" = Just (Examine foodPoisoning)
 action2 _ _ _ = Nothing
 
 {-
-Complete Action takes a specific command and GameData
+Complete Action takes a specific command and GameData state and
+validates the command provided by the user into the defined
+Functions below.
 -}
 completeAction :: Command -> GameData -> (GameData, String)
 completeAction (Go direction) gd = go direction gd
@@ -179,6 +157,11 @@ completeAction (OpenC box) gd = openC box gd
 completeAction (LightsOn object) gd = switchLight object gd
 completeAction (Combine object object2) gd = combine object object2 gd
 
+{-
+Rule is a specific type, similar to Action, however these are
+defined separately as they do not change game state, but rather
+just reveal information to the user.
+-}
 rule :: String -> Maybe Rule
 rule "quit"      = Just quit
 rule "inventory" = Just inv
@@ -186,28 +169,20 @@ rule "help"      = Just help
 rule _           = Nothing
 
 {- Given a direction and a room to move from, return the room id in
-   that direction, if it exists.
-
-e.g. try these at the ghci prompt
-
-*Main> move "north" bedroom
-Just "kitchen"
-
-*Main> move "north" kitchen
-Nothing
+   that direction, if it exists. Uses an if then else statement to
+   determine what the valid directions are and return the possibilities.
 -}
-
 move :: Direction -> Room -> Maybe String
 move dir rm = if (result == []) then Nothing else Just (room (head result))
      where result = filter (\x -> dir == exit_dir x) (exits rm)
 
-{- Return True if the object appears in the room. -}
-
+{- Return True if the object appears in the room.
+   Uses elem to see if the object is contained in the room
+-}
 objectHere :: Object -> Room -> Bool
 objectHere o rm = o `elem` (objects rm)
 
 {- Return True (and which container) if the object appears in one of the containers in the room. -}
-
 objectInCupboard :: Object -> Room -> (Bool, Box)
 objectInCupboard o rm
    | inBox = (inBox, box)
@@ -221,37 +196,33 @@ findBoxContainingItem :: Object -> [Box] -> Box
 findBoxContainingItem obj boxes = b
    where (b:_) = filter (\box -> obj `elem` items box) boxes
 
-
 inCupboard :: Object -> Box -> Bool
 inCupboard o bx = o `elem` (items bx)
 
 {- Given an object id and a room description, return a new room description
-   without that object -}
-
+   without that object. Uses filter to find the object in the room and remove
+   it.
+-}
 removeObject :: Object -> Room -> Room
 removeObject o rm = rm {objects = filter (/= o) (objects rm)}
 
 {- Given an object and a room description, return a new room description
    with that object added -}
-
 addObject :: Object -> Room -> Room
 addObject o rm = rm {objects = (objects rm) ++ [o]}
 
 {- Given an object id and a list of objects, return the object data. Note
    that you can assume the object is in the list (i.e. that you have
    checked with 'objectHere') -}
-
 findObj :: String -> [Object] -> Object
 findObj o ds = head (filter (\x -> (obj_name x) == o) ds)
 
 {- Use 'findObj' to find an object in a room description -}
-
 objectData :: String -> Room -> Object
 objectData o rm = findObj o (objects rm)
 
 {- Given a game state and a room id, replace the old room information with
    new data. If the room id does not already exist, add it. -}
-
 updateRoom :: GameData -> String -> Room -> GameData
 updateRoom gd rmid rmdata = if lookup rmid (world gd) /= Nothing
                                then gd {world=[if (x==rmid) then (rmid, rmdata) else (x,y) | (x,y) <- world gd]}
@@ -259,7 +230,6 @@ updateRoom gd rmid rmdata = if lookup rmid (world gd) /= Nothing
 
 {- Given a game state and an object id, find the object in the current
    room and add it to the player's inventory -}
-
 addInv :: GameData -> Object -> GameData
 addInv gd obj
     | objectHere obj (getRoomData gd) = gd {inventory = (inventory gd) ++ [obj]}
@@ -268,14 +238,14 @@ addInv gd obj
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
-
 removeInv :: GameData -> Object -> GameData
 removeInv gd obj
     | carrying gd obj = gd {inventory = filter (\x -> x /= obj) (inventory gd)}
     | otherwise = gd
 
-{- Does the inventory in the game state contain the given object? -}
-
+{- Does the inventory in the game state contain the given object?
+   Again uses elem to see if the object is in the inventory.
+-}
 carrying :: GameData -> Object -> Bool
 carrying gd obj = elem obj (inventory gd)
 
@@ -284,13 +254,9 @@ Define the "go" action. Given a direction and a game state, update the game
 state with the new location. If there is no exit that way, report an error.
 Remember Actions return a 2-tuple of GameData and String. The String is
 a message reported to the player.
-
-e.g.
-*Main> go "north" initState
-(kitchen,"OK")
-
+Uses move to find the next valid direction and returns the valid game state
+if the
 -}
-
 go :: Direction -> GameData -> (GameData, String)
 go dir state = case move dir (getRoomData state) of
     Just next -> (state {location_id = next}, "Moved successfully.")
@@ -307,7 +273,6 @@ go dir state = case move dir (getRoomData state) of
     * update the game state with this new room in the current location
       (use 'location_id' to find where the player is)
 -}
-
 get :: Action
 get obj state
     | obj == shower = (state, "You can't pick up a whole shower.")
@@ -333,7 +298,6 @@ get obj state
    Similar to 'get' but in reverse - find the object in the inventory, create
    a new room with the object in, update the game world with the new room.
 -}
-
 put :: Action
 put obj state
     | carrying state obj = (state'', "Left item in room.")
@@ -347,7 +311,6 @@ put obj state
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
    inventory! -}
-
 examine :: Action
 examine obj state =
    do
@@ -359,7 +322,6 @@ examine obj state =
    both the pot and the mug. This should update the status of the "mug"
    object in the player's inventory to be a new object, a "full mug".
 -}
-
 pour :: Action
 pour obj state
     | carrying state mug && carrying state coffeepot = (state'', "Poured successfully.")
@@ -374,7 +336,6 @@ pour obj state
 
    Also, put the empty coffee mug back in the inventory!
 -}
-
 drink :: Action
 drink obj state
     | not (obj == fullmug || obj == milkyCoffeeMug) = (state, "This is not drinkable.")
@@ -385,7 +346,6 @@ drink obj state
             state'' = state' {inventory = filter (/= obj) (inventory state) ++ [mug]}
 
 {- Eat food (depending on what it is you may get food poisoning). Once done, also update the 'eaten' flag in the game state. -}
-
 eat :: Action
 eat obj state
     | not (obj == eggs || obj == bread || obj == eggyBread || obj == frenchToast) = (state, "This is not edible.")
@@ -401,7 +361,6 @@ eat obj state
             badState = state' {inventory = (inventory state'') ++ [foodPoisoning]}
 
 {- Used to use various objects to implement more puzzles for the player. -}
-
 use :: Action
 use obj state
     | (obj == toothbrush) && (location_id state == "bathroom") && (carrying state toothbrush) = (toothState', "Brushed teeth.")
@@ -422,7 +381,6 @@ use obj state
 
 {-Turn the light on: game can be played with the lights off but no descriptions will be given.
 If the player never turns on the light but completes the game they get an achievement. -}
-
 switchLight :: Action 
 switchLight obj state
     | (obj == lightswitch) = (lightState, "Lights turned on/off.")
@@ -433,7 +391,6 @@ switchLight obj state
             torchState = state {torchLightOn = not (torchLightOn state), torchOnEver = True}
 
 {- Open cupboard and then update the room-}
-
 openC :: Box -> GameData -> (GameData, String)
 openC box state
     | hasBox box room = (state', "Opened successfully!")
@@ -447,7 +404,6 @@ openC box state
             rmid = location_id state
 
 {- Does the room contain the given box? -}
-
 hasBox :: Box -> Room -> Bool
 hasBox box room = elem box (containers room)
 
@@ -458,7 +414,6 @@ hasBox box room = elem box (containers room)
    Use 'updateRoom' once you have made a new description. You can use 
    'openedhall' and 'openedexits' from World.hs for this.
 -}
-
 open :: Action
 open obj state
     | (caffeinated state) && getRoomData state == hall = (state', "Opened front door.")
@@ -479,7 +434,6 @@ tripleSearch x y ((a,a1,b):xs)
 {- Combine is a kind of modified action taking two objects as input, removing both of them from the player's inventory and 
 adding the outputs to their inventory. It uses a list of triples where the first two values are the inputs (which it searches
 for in any order) and the third is a list of outputs. -}
-
 combine :: Object -> Object -> GameData -> (GameData, String)
 combine obj obj2 state
    | outcome == [] = (state, "You cannot combine these.")
@@ -495,7 +449,6 @@ combineAdd [] gd = gd
 combineAdd (x:xs) gd = combineAdd xs gd {inventory = (inventory gd) ++ [x]}
 
 {- Don't update the game state, just list what the player is carrying -}
-
 inv :: Rule
 inv state = (state, showInv (inventory state))
    where showInv [] = "You aren't carrying anything"
@@ -507,14 +460,18 @@ help :: Rule
 help state = (state, showCommands)
    where showCommands = "list of commands!!\
       \\n\
+      \\n- SAVE (SaveFile) - save the current game state to a name of your choice\
+      \\n- LOAD (SaveFile) - load the SaveFile game state to where left off\
       \\n- go (direction) - go to the room to your (direction) [eg. 'go north']\
       \\n- get (object) - pick up an (object) and put it in your inventory (if that object is in the room)\
       \\n- drop (object) - drop an (object) into the room (if that object is in your inventory)\
       \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
       \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
       \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
+      \\n- eat (food) - eat food (only works on eatable objects)\
       \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
-      \\n- open (door) - open the front door\
+      \\n- combine (object) (object) - combine two objects together to get something new\
+      \\n- open (door/cupboard) - open the front door or a cupboard\
       \\n- inventory - see inventory\
       \\n- help - see list of commands\
       \\n- quit - quit the game\n"
@@ -536,40 +493,3 @@ checkDefined :: Object -> Bool
 checkDefined x
    | (obj_name x) == "" || (obj_longname x) == "" || (obj_desc x) == "" = False
    | otherwise = True
-
-
--- QuickCheck, buggy implementation, fails all tests and does not fully work
-{-
-main :: IO ()
-main = do quickCheck move
-          quickCheck objectHere
-          quickCheck removeObject
-          quickCheck addObject
-          quickCheck findObj
-          quickCheck objectData
-          quickCheck updateRoom
-          quickCheck addInv
-          quickCheck removeInv
-          quickCheck carrying
-
-instance Arbitrary Direction where
-    arbitrary = elements [North, East, West, South, Out, In]
-
-instance Arbitrary Room where
-  arbitrary = elements [bedroom, bathroom, kitchen, hall, street]
-
-instance Arbitrary Object where
-    arbitrary = elements [mug, fullmug, milkyCoffeeMug, emptyMilk, coffeepot, torch, emptyTorch, batteries, toothbrush, usedToothbrush, shower, lightswitch, milk, eggs, bread]
-
-instance Arbitrary GameData where
-    arbitrary = elements [GameData "bedroom" gameworld [] False False False False False False False False False False]
-
-instance Testable Room where
-    --testable = elements [bedroom, bathroom, kitchen, hall, street]
-
-instance Testable Object where
-    --testable = elements [mug, fullmug, milkyCoffeeMug, emptyMilk, coffeepot, torch, emptyTorch, batteries, toothbrush, usedToothbrush, shower, lightswitch, milk, eggs, bread]
-
-instance Testable GameData where
-    --testable = elements [GameData "bedroom" gameworld [] False False False False False False False False False False]
--}

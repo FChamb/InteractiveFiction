@@ -5,6 +5,11 @@ import Parsing
 import Data.Maybe
 --import Test.QuickCheck
 
+{-
+Data types introduced to instead of the previous
+string declarations. A command exists for every one
+of the major functions in the game.
+-}
 data Command = Go Direction   | Get Object   |
                Drop Object    | Pour Object  |
                Examine Object | Drink Object |
@@ -13,6 +18,10 @@ data Command = Go Direction   | Get Object   |
                OpenC Box      | Combine Object Object
    deriving Show
 
+{-
+Action type which translates the user provided input of length
+two into valid Command Data types above.
+-}
 action :: String -> String -> Maybe Command
 action "go" "north" = Just (Go North)
 action "go" "east" = Just (Go East)
@@ -110,6 +119,10 @@ action "open" "cupboard" = Just (OpenC kitchenCupboard)
 action "close" "cupboard" = Just (OpenC kitchenCupboard)
 action _ _ = Nothing
 
+{-
+Action2 type which translates the user provided input of length
+three into valid Command Data types above.
+-}
 action2 :: String -> String -> String -> Maybe Command
 action2 "combine" "coffee" "milk" = Just (Combine fullmug milk)
 action2 "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
@@ -149,6 +162,9 @@ action2 "examine" "food" "poisoning" = Just (Examine foodPoisoning)
 
 action2 _ _ _ = Nothing
 
+{-
+Complete Action takes a specific command and GameData
+-}
 completeAction :: Command -> GameData -> (GameData, String)
 completeAction (Go direction) gd = go direction gd
 completeAction (Get object) gd = get object gd

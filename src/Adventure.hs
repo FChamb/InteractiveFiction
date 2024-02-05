@@ -11,6 +11,12 @@ import System.Console.Haskeline
 import Control.Monad.IO.Class (liftIO)
 import Prelude
 
+
+{-
+Make win message takes a GameData state and returns a string. This function
+enables the repl loop to create an output depending on the various choices the
+user made in their play through of the game.
+-}
 makeWinMessage :: GameData -> String
 makeWinMessage gd = winMessage
    where
@@ -44,11 +50,11 @@ makeWinMessage gd = winMessage
       winMessage = startWinMessage ++ gameMessage ++ foodMessage ++ lightMessage ++ endWinMessage
 
 {- Given a game state, and user input (as a list of words) return a 
-   new game state and a message for the user. -}
-
-
+   new game state and a message for the user.
+   added the possibility for a new type of process which accepts
+   three arguments. -}
 process :: GameData -> [String] -> (GameData, String)
-process state [cmd,arg] = case action cmd arg of
+process state [cmd,arg] = case action state cmd arg of
                                  Just fn -> completeAction fn state
                                  Nothing -> (state, "I don't understand.")
 process state [cmd]          = case rule cmd of
@@ -59,6 +65,13 @@ process state [cmd,arg,arg'] = case action2 cmd arg arg' of
                                  Nothing -> (state, "I don't understand.")
 process state _ = (state, "I don't understand.")
 
+{-
+Repl loop which implements Haskeline features. The loop checks if the player
+has enabled the lights and changes the output dependent on that. Next the command
+is taken in from the user and processed. If the command equals SAVE or LOAD the argument
+is instantly processed and calls the save or load functions. Other commands are processed
+using the above process functions.
+-}
 repl :: GameData -> InputT IO GameData
 repl state | finished state = return state
 repl state = do
@@ -84,18 +97,29 @@ repl state = do
                     Nothing -> do outputStrLn "Enter a command: "
                                   repl state
 
+{-
+This is the function called when the game states. Basically just starts
+the repl loop using Haskeline.
+-}
 main :: IO ()
 main = do putStr "------------------------------------------------------------------\n[Game start! Type help for list of commands and quit to exit.]\n"
           runInputT defaultSettings (repl initState)
           return ()
 
+{-
+Save takes a game data state and a filename. Using writeFile, the
+game data is converted to a string using show and then written to the
+provided file name is the saves folder.
+-}
 save :: GameData -> String -> IO ()
 save gd filename = do writeFile ("saves/" ++ filename) (show gd)
                       putStrLn ("Saved game! Saved to saves/" ++ filename ++ ". \n")
                       return ()
                       -- # maybe edit this so we give our own error message if the save doesn't work (currently ghc gives and exception and exits the game immediately)
 
+{-
 
+-}
 processLoad :: GameData -> IO (GameData, Bool) -> InputT IO GameData
 processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
   -- now you can use loadedGameData within io monad (seemingly the only way to convert io gamedata to useable gamedata)
@@ -111,14 +135,3 @@ load filePath = do
                   case reads contents :: [(GameData, String)] of
                      [(gameData, "")] -> return (gameData, True)
                      _                -> return (initState, False)
-
-  --return (initState, True)
-{-
-   how to complete:
-   1) read string from saves/filename: do fileString <- readFile "../saves/" ++ filename
-   2) [ implement working readGameData function which can convert a gamedata string representation to gamedata (output Maybe GameData) ]
-   3) let loadData = readGameData fileString
-   3) case loadData of
-         Just gameData  -> return (loadData, True)
-         Nothing        -> return (initState, False)
--}

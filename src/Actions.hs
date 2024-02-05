@@ -21,79 +21,95 @@ data Command = Go Direction   | Get Object   |
 Action type which translates the user provided input of length
 two into valid Command Data types above.
 -}
-action :: String -> String -> Maybe Command
-action "go" "north" = Just (Go North)
-action "go" "east" = Just (Go East)
-action "go" "west" = Just (Go West)
-action "go" "south" = Just (Go South)
-action "go" "in" = Just (Go In)
-action "go" "inside" = Just (Go In)
-action "go" "out" = Just (Go Out)
-action "go" "outside" = Just (Go Out)
+action :: GameData -> String -> String -> Maybe Command
+action gd "go" "north" = Just (Go North)
+action gd "go" "east" = Just (Go East)
+action gd "go" "west" = Just (Go West)
+action gd "go" "south" = Just (Go South)
+action gd "go" "in" = Just (Go In)
+action gd "go" "inside" = Just (Go In)
+action gd "go" "out" = Just (Go Out)
+action gd "go" "outside" = Just (Go Out)
 
-action "get" "mug" = Just (Get mug)
-action "get" "coffee" = Just (Get fullmug)
-action "get" "milk" = Just (Get milk)
-action "get" "toothbrush" = Just (Get toothbrush)
-action "get" "pot" = Just (Get coffeepot)
-action "get" "coffeepot" = Just (Get coffeepot)
-action "get" "torch" = Just (Get emptyTorch)
-action "get" "torch" = Just (Get torch)
-action "get" "shower" = Just (Get shower)
-action "get" "batteries" = Just (Get batteries)
-action "get" "eggs" = Just (Get eggs)
-action "get" "bread" = Just (Get bread)
-action "get" "oven" = Just (Get oven)
+action gd "get" "mug"
+    | checkObj milkyCoffeeMug gd = Just (Get milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Get fullmug)
+    | checkObj mug gd = Just (Get mug)
+action gd "get" "coffee" = Just (Get fullmug)
+action gd "get" "milk" = Just (Get milk)
+action gd "get" "toothbrush"
+    | checkObj toothbrush gd = Just (Get toothbrush)
+    | checkObj usedToothbrush gd = Just (Get usedToothbrush)
+action gd "get" "pot" = Just (Get coffeepot)
+action gd "get" "coffeepot" = Just (Get coffeepot)
+action gd "get" "torch"
+    | checkObj torch gd = Just (Drop torch)
+    | checkObj emptyTorch gd = Just (Drop emptyTorch)
+action gd "get" "shower" = Just (Get shower)
+action gd "get" "batteries" = Just (Get batteries)
+action gd "get" "eggs" = Just (Get eggs)
+action gd "get" "bread" = Just (Get bread)
+action gd "get" "oven" = Just (Get oven)
 
-action "drop" "mug" = Just (Drop mug) --
-action "drop" "coffee" = Just (Drop fullmug)
-action "drop" "milk" = Just (Drop milk)
-action "drop" "toothbrush" = Just (Drop toothbrush)
-action "drop" "pot" = Just (Drop coffeepot)
-action "drop" "coffeepot" = Just (Drop coffeepot)
-action "drop" "torch" = Just (Drop emptyTorch) --
-action "drop" "torch" = Just (Drop torch)
-action "drop" "batteries" = Just (Drop batteries)
-action "drop" "eggs" = Just (Drop eggs)
-action "drop" "bread" = Just (Drop bread)
+action gd "drop" "mug"
+    | checkObj milkyCoffeeMug gd = Just (Drop milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Drop fullmug)
+    | checkObj mug gd = Just (Drop mug)
+action gd "drop" "coffee" = Just (Drop fullmug)
+action gd "drop" "milk" = Just (Drop milk)
+action gd "drop" "toothbrush"
+    | checkObj toothbrush gd = Just (Drop toothbrush)
+    | checkObj usedToothbrush gd = Just (Drop usedToothbrush)
+action gd "drop" "pot" = Just (Drop coffeepot)
+action gd "drop" "coffeepot" = Just (Drop coffeepot)
+action gd "drop" "torch"
+    | checkObj torch gd = Just (Drop torch)
+    | checkObj emptyTorch gd = Just (Drop emptyTorch)
+action gd "drop" "batteries" = Just (Drop batteries)
+action gd "drop" "eggs" = Just (Drop eggs)
+action gd "drop" "bread" = Just (Drop bread)
 
-action "pour" "coffee" = Just (Pour coffeepot)
+action gd "pour" "coffee" = Just (Pour coffeepot)
 
-action "examine" "mug" = Just (Examine mug)
-action "examine" "coffee" = Just (Examine fullmug)
-action "examine" "toothbrush" = Just (Examine toothbrush)
-action "examine" "coffee" = Just (Examine fullmug)
-action "examine" "coffeepot" = Just (Examine coffeepot)
-action "examine" "pot" = Just (Examine coffeepot)
-action "examine" "torch" = Just (Examine torch) --
-action "examine" "torch" = Just (Examine emptyTorch)
-action "examine" "batteries" = Just (Examine batteries)
-action "examine" "toothbrush" = Just (Examine toothbrush)
-action "examine" "shower" = Just (Examine shower)
-action "examine" "lightswitch" = Just (Examine lightswitch)
-action "examine" "eggs" = Just (Examine eggs)
-action "examine" "milk" = Just (Examine milk)
-action "examine" "bread" = Just (Examine bread)
-action "examine" "satisfaction" = Just (Examine satisfaction)
-action "examine" "oven" = Just (Examine oven)
+action gd "examine" "mug"
+    | checkObj milkyCoffeeMug gd = Just (Examine milkyCoffeeMug)
+    | checkObj fullmug gd = Just (Examine fullmug)
+    | checkObj mug gd = Just (Examine mug)
+action gd "examine" "coffee" = Just (Examine fullmug)
+action gd "examine" "toothbrush"
+    | checkObj toothbrush gd = Just (Examine toothbrush)
+    | checkObj usedToothbrush gd = Just (Examine usedToothbrush)
+action gd "examine" "coffeepot" = Just (Examine coffeepot)
+action gd "examine" "pot" = Just (Examine coffeepot)
+action gd "examine" "torch"
+    | checkObj torch gd = Just (Examine torch)
+    | checkObj emptyTorch gd = Just (Examine emptyTorch)
+action gd "examine" "batteries" = Just (Examine batteries)
+action gd "examine" "shower" = Just (Examine shower)
+action gd "examine" "lightswitch" = Just (Examine lightswitch)
+action gd "examine" "eggs" = Just (Examine eggs)
+action gd "examine" "milk" = Just (Examine milk)
+action gd "examine" "bread" = Just (Examine bread)
+action gd "examine" "satisfaction" = Just (Examine satisfaction)
+action gd "examine" "oven" = Just (Examine oven)
 
-action "drink" "coffee" = Just (Drink fullmug)
+action gd "drink" "coffee" = Just (Drink fullmug)
 
-action "eat" "egg" = Just (Eat eggs)
-action "eat" "eggs" = Just (Eat eggs)
-action "eat" "bread" = Just (Eat bread)
+action gd "eat" "egg" = Just (Eat eggs)
+action gd "eat" "eggs" = Just (Eat eggs)
+action gd "eat" "bread" = Just (Eat bread)
 
-action "use" "toothbrush" = Just (Use toothbrush)
-action "use" "shower" = Just (Use shower)
-action "use" "lightswitch" = Just (LightsOn lightswitch)
-action "use" "torch" = Just (LightsOn torch)
-action "use" "oven" = Just (Use oven)
+action gd "use" "toothbrush" = Just (Use toothbrush)
+action gd "use" "shower" = Just (Use shower)
+action gd "use" "lightswitch" = Just (LightsOn lightswitch)
+action gd "use" "torch" = Just (LightsOn torch)
+action gd "use" "oven" = Just (Use oven)
 
-action "open" "door" = Just (Open)
+action gd "open" "door" = Just (Open)
 
-action "open" "cupboard" = Just (OpenC kitchenCupboard)
-action "close" "cupboard" = Just (OpenC kitchenCupboard)
-action _ _ = Nothing
+action gd "open" "cupboard" = Just (OpenC kitchenCupboard)
+action gd "close" "cupboard" = Just (OpenC kitchenCupboard)
+action _ _ _ = Nothing
 
 {-
 Action2 type which translates the user provided input of length
@@ -480,7 +496,6 @@ quit :: Rule
 quit state = (state { finished = True }, "Bye bye")
 
 {- Helper function to return object by name if in the current room or inventory, returns empty object if not -}
-
 checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
    | carrying state obj = findObj (obj_name obj) (inventory state)
@@ -493,3 +508,11 @@ checkDefined :: Object -> Bool
 checkDefined x
    | (obj_name x) == "" || (obj_longname x) == "" || (obj_desc x) == "" = False
    | otherwise = True
+
+checkObj :: Object -> GameData -> Bool
+checkObj obj state
+    | (carrying state obj) || (objectHere obj room) || (x) = True
+    | otherwise = False
+        where
+            (x, y) = objectInCupboard obj room
+            room = (getRoomData state)

@@ -50,35 +50,6 @@ data GameData = GameData { location_id :: String, -- where player is
                          }
    deriving (Show, Read)
 
--- FORMATTING FOR THIS NEEDS TO CHANGE OR WE NEED TO JUST USE BASE SHOW
-{- instance Show GameData where
-    show (GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin) =
-        "GameData \"" ++ locId ++ "\" " ++ (formatGameworld wrld) ++ " " ++ formatInv inv ++
-        " " ++ show p ++ " " ++ show c ++ " " ++ show e ++ " " ++ show b ++
-        " " ++ show sh ++ " " ++ show l ++ " " ++ show tl ++ " " ++ show lOnEv ++
-        " " ++ show tOnEv ++ " " ++ show fin -} 
-
-{-
-readGameData :: String -> Maybe GameData
-readGameData inputString = GameData locId wrld inv p c e b sh l tl lOnEv tOnEv fin
-   where
-      locId = _ --get first string encased in quotes
-      wrld = _ -- get [(String,Room)] string and format as [(String,Room)]
-      inv = _ -- get [Object] string and format as [Object]
-      p = _ -- first formatted bool
-      c = _ -- second
-      e = _ -- etc
-      b = _
-      sh = _
-      l = _
-      tl = _
-      lOnEv = _ 
-      tOnEv = _
-      fin = _ 
--}
-
--- example: GameData "bedroom" [("bedroom", bedroom), ("bathroom", bathroom), ("kitchen", kitchen), ("hall", hall), ("street", street)] [] False False False False False False False False False False
-
 won :: GameData -> Bool
 won gd = location_id gd == "street"
 

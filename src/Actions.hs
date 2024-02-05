@@ -520,12 +520,13 @@ checkForObj obj state
    | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
 
 {- Helper function to check whether a given object has valid values for name, longname and description -}
-
 checkDefined :: Object -> Bool
 checkDefined x
    | (obj_name x) == "" || (obj_longname x) == "" || (obj_desc x) == "" = False
    | otherwise = True
 
+{- Helper function to check whether a given object is being carried by the player, is in the current
+room or in a cupboard in the room -}
 checkObj :: Object -> GameData -> Bool
 checkObj obj state
     | (carrying state obj) || (objectHere obj room) || (x) = True

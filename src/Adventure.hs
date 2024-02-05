@@ -126,7 +126,11 @@ processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
                                              repl loadedGameData
                                  False -> do liftIO $ putStrLn "Error while loading. Continuing game from previous state.\n"
                                              repl gd
-                             
+
+{- Load takes a file path and using a do statement reads the file in the saves folder.
+Then using the default defined reads function the output is put into a tuple of the
+GameData and boolean for successful load.
+-}
 load :: FilePath -> IO (GameData, Bool)
 load filePath = do
                   contents <- readFile ("saves/" ++ filePath)

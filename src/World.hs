@@ -75,8 +75,10 @@ type Rule = GameData -> (GameData, String)
 data Direction = North | East | West | South | Out | In
    deriving (Show, Read, Eq)
 
+-- Tuples of objects which can be combined together to create a new type of object.
 recipes = [(fullmug, milk, [milkyCoffeeMug, emptyMilk]), (emptyTorch, batteries, [torch]), (eggs, bread, [eggyBread])]
 
+{- Contents of all the objects -}
 mug, fullmug, milkyCoffeeMug, emptyMilk, coffeepot, torch, emptyTorch, batteries, toothbrush, usedToothbrush, shower, lightswitch, milk, eggs, bread :: Object
 mug            = Obj "mug" "a coffee mug" "A coffee mug"
 fullmug        = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
@@ -102,6 +104,7 @@ oven           = Obj "oven" "an oven" "A nice little oven. It deserves more love
 kitchenCupboard :: Box
 kitchenCupboard = Box "a cupboard" [eggs, bread, batteries] False
 
+{- Contents of all the rooms -}
 bedroom, bathroom, kitchen, hall, street :: Room
 
 bedroom = Room "You are in your bedroom."
@@ -143,22 +146,22 @@ gameworld = [("bedroom", bedroom),
              ("hall", hall),
              ("street", street)]
 
+{- Helper function which returns the begining and default game state -}
 initState :: GameData
 initState = GameData "bedroom" gameworld [] False False False False False False False False False False False
 
 {- Return the room the player is currently in. -}
-
 getRoomData :: GameData -> Room
 getRoomData gd = maybe undefined id (lookup (location_id gd) (world gd))
 
-{-readGameData :: String -> Maybe GameData
-readGameData str = readMaybe str-}
-
+{- Helper function which formats a room type into a string value -}
 formatRoomPair :: (String, Room) -> String
 formatRoomPair (name, room) = "(\"" ++ name ++ "\", " ++ name ++ ")"
 
+{- Helper function which formats the world type into a string value -}
 formatGameworld :: [(String, Room)] -> String
 formatGameworld rooms = "[" ++ intercalate ", " (map formatRoomPair rooms) ++ "]"
 
+{- Helper function which formats the inventory into a string value -}
 formatInv:: [Object] -> String
 formatInv xs = "[" ++ intercalate ", " (map obj_name xs) ++ "]"

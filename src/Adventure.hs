@@ -35,7 +35,7 @@ makeWinMessage gd = winMessage
          | otherwise = ""
       lightMessage
          | not (lightsOnEver gd || torchOnEver gd) = "...entirely in the dark? How did you do that? [Achievement: Echolocation]\n"
-         | not (lightsOnEver gd) = "...without using the light switch once? Why did you do it all by torch light? [Achievement: Paranormal Investigator]\n" 
+         | not (lightsOnEver gd) = "...without using the light switch once? Why did you do it all by torch light? [Achievement: Paranormal Investigator]\n"
          | not (lightOn gd) = "...and you turned the light off before you left! How eco-friendly.\n"
          | otherwise = ""
       baristaMessage
@@ -47,7 +47,7 @@ makeWinMessage gd = winMessage
          | otherwise = cleanMessage ++ eatMessage
       score = length (filter (==True) [brushed gd, eaten gd, showered gd])
       endWinMessage = "\nNow go to your lectures..."
-      winMessage = startWinMessage ++ gameMessage ++ foodMessage ++ baristaMessage ++ lightMessage ++ endWinMessage
+      winMessage = "\ESC[32m" ++ startWinMessage ++ gameMessage ++ foodMessage ++ baristaMessage ++ lightMessage ++ endWinMessage ++ "\ESC[0m"
 
 {- Given a game state, and user input (as a list of words) return a 
    new game state and a message for the user.
@@ -77,8 +77,8 @@ repl state | finished state = return state
 repl state = do
                 if (lightOn state || torchLightOn state) then outputStrLn (showRoom (getRoomData state)) else outputStrLn "You cannot see anything, the lights are off.\n"
                 outputStrLn "What now? "
-                cmd <- getInputLine ">> "
-                outputStrLn "------------------------------------------------------------------\n"
+                cmd <- getInputLine ">> \ESC[31m"
+                outputStrLn "\ESC[0m------------------------------------------------------------------\n"
                 case cmd of
                     Just fn -> case words fn of
                      ["save", filename] -> do liftIO (save state filename)
@@ -88,7 +88,8 @@ repl state = do
 
                      otherCommand -> do
                            let (state', msg) = process state otherCommand
-                           outputStrLn msg
+                               message = "\ESC[97m" ++ msg ++ "\ESC[0m"
+                           outputStrLn message
                            if won state'
                               then do
                                  outputStrLn (makeWinMessage state')

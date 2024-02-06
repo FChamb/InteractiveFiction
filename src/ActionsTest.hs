@@ -2,8 +2,6 @@ import Actions
 import World
 import Test.QuickCheck
 
--- QuickCheck, buggy implementation, fails all tests and does not fully work
-
 main :: IO ()
 main = do quickCheck move
           quickCheck objectHere

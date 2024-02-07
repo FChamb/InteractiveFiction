@@ -71,6 +71,7 @@ action gd "drop" "eggs" = Just (Drop eggs)
 action gd "drop" "bread" = Just (Drop bread)
 
 action gd "pour" "coffee" = Just (Pour coffeepot)
+action gd "pour" "milk" = Just (Pour milk)
 
 action gd "examine" "mug"
     | checkObj milkyCoffeeMug gd = Just (Examine milkyCoffeeMug)

@@ -120,14 +120,12 @@ three into valid Command Data types above.
 -}
 action2 :: GameData -> String -> String -> String -> Maybe Command
 action2 gd "combine" "coffee" "milk" = Just (Combine fullmug milk)
-action2 gd "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+action2 gd "combine" "milk" "coffee" = Just (Combine milk fullmug)
 action2 gd "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
 action2 gd "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
 action2 gd "combine" "eggs" "bread" = Just (Combine bread eggs)
 action2 gd "combine" "bread" "eggs" = Just (Combine eggs bread)
 
--- until parsed is fixed i'm just going to put the multiword commands here so they work
--- #to do, make get coffee mug/mug and get torch interchangeable so they work for both items
 action2 gd "eat" "eggy" "bread" = Just (Eat eggyBread)
 action2 gd "eat" "french" "toast" = Just (Eat frenchToast)
 
@@ -518,7 +516,7 @@ checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
    | carrying state obj = findObj (obj_name obj) (inventory state)
    | objectHere obj (getRoomData state) = objectData (obj_name obj) (getRoomData state)
-   | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
+   | otherwise = Obj "" "" ""
 
 {- Helper function to check whether a given object has valid values for name, longname and description -}
 checkDefined :: Object -> Bool

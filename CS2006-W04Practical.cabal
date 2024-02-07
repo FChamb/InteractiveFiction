@@ -21,7 +21,7 @@ extra-source-files:
 
 executable CS2006-W04Practical
   main-is:             Adventure.hs
-  other-modules:       Actions, Parsing, World
+  other-modules:       Actions, Parsing, World, ActionsTest
   -- other-extensions:
   build-depends:
       base >= 1.0,

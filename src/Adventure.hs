@@ -117,11 +117,9 @@ save :: GameData -> String -> IO ()
 save gd filename = do writeFile ("saves/" ++ filename) (show gd)
                       putStrLn ("Saved game! Saved to saves/" ++ filename ++ ". \n")
                       return ()
-                      -- # maybe edit this so we give our own error message if the save doesn't work (currently ghc gives and exception and exits the game immediately)
 
 processLoad :: GameData -> IO (GameData, Bool) -> InputT IO GameData
 processLoad gd ioAction = do (loadedGameData, success) <- liftIO ioAction
-  -- now you can use loadedGameData within io monad (seemingly the only way to convert io gamedata to useable gamedata)
                              case success of
                                  True  -> do liftIO $ putStrLn "Loaded successfully.\n"
                                              repl loadedGameData

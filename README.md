@@ -12,12 +12,12 @@
 6. Play the game.
 
 ### Game Commands:
-* SAVE (save name) - save the current game state to a name of your choice
-* LOAD (save name) - load the SaveFile game state to where left off
+* save (filename) - save the current game state to a name of your choice
+* load (filename) - load the SaveFile game state to where left off
 * go (direction) - go to the room to your (direction) [eg. 'go north']
 * get (object) - pick up an (object) and put it in your inventory (if that object is in the room)
 * drop (object) - drop an (object) into the room (if that object is in your inventory)
-* pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)
+* pour (coffee) - pour coffee into a mug (if you have both coffee and an empty mug in your inventory)
 * examine (object) - get information about an object (if it is in your inventory or in the room)
 * drink (liquid) - drink a mug of liquid (if you have a mug of liquid)
 * eat (food) - eat food (only works on eatable objects)

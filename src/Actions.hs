@@ -355,6 +355,7 @@ examine obj state =
 -}
 pour :: Action
 pour obj state
+    | obj == milk = (state, "You can't pour milk before coffee! Pour the coffee then combine the milk.")
     | carrying state mug && carrying state coffeepot = (state'', "Poured successfully.")
     | otherwise = (state, "You can not pour right now!")
         where
@@ -493,16 +494,16 @@ help :: Rule
 help state = (state, showCommands)
    where showCommands = "list of commands!!\
       \\n\
-      \\n- SAVE (SaveFile) - save the current game state to a name of your choice\
-      \\n- LOAD (SaveFile) - load the SaveFile game state to where left off\
+      \\n- save (filename) - save the current game state to a name of your choice\
+      \\n- load (filename) - load the SaveFile game state to where left off\
       \\n- go (direction) - go to the room to your (direction) [eg. 'go north']\
       \\n- get (object) - pick up an (object) and put it in your inventory (if that object is in the room)\
       \\n- drop (object) - drop an (object) into the room (if that object is in your inventory)\
-      \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
+      \\n- pour (coffee) - pour coffee into a mug (if you have both coffee and an empty mug in your inventory)\
       \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
       \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
-      \\n- eat (food) - eat food (only works on eatable objects)\
-      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
+      \\n- eat (food) - eat food (only works on edible objects)\
+      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch, oven]\
       \\n- combine (object) (object) - combine two objects together to get something new\
       \\n- open (door/cupboard) - open the front door or a cupboard\
       \\n- inventory - see inventory\

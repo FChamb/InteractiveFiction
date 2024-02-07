@@ -71,6 +71,7 @@ action gd "drop" "eggs" = Just (Drop eggs)
 action gd "drop" "bread" = Just (Drop bread)
 
 action gd "pour" "coffee" = Just (Pour coffeepot)
+action gd "pour" "milk" = Just (Pour milk)
 
 action gd "examine" "mug"
     | checkObj milkyCoffeeMug gd = Just (Examine milkyCoffeeMug)
@@ -120,14 +121,12 @@ three into valid Command Data types above.
 -}
 action2 :: GameData -> String -> String -> String -> Maybe Command
 action2 gd "combine" "coffee" "milk" = Just (Combine fullmug milk)
-action2 gd "combine" "milk" "coffee" = Just (Combine milk fullmug) -- combine doesn't care about order so when parsing is fixed we don't need to define this twice
+action2 gd "combine" "milk" "coffee" = Just (Combine milk fullmug)
 action2 gd "combine" "torch" "batteries" = Just (Combine emptyTorch batteries)
 action2 gd "combine" "batteries" "torch" = Just (Combine batteries emptyTorch)
 action2 gd "combine" "eggs" "bread" = Just (Combine bread eggs)
 action2 gd "combine" "bread" "eggs" = Just (Combine eggs bread)
 
--- until parsed is fixed i'm just going to put the multiword commands here so they work
--- #to do, make get coffee mug/mug and get torch interchangeable so they work for both items
 action2 gd "eat" "eggy" "bread" = Just (Eat eggyBread)
 action2 gd "eat" "french" "toast" = Just (Eat frenchToast)
 
@@ -355,6 +354,7 @@ examine obj state =
 -}
 pour :: Action
 pour obj state
+    | obj == milk = (state, "You can't pour milk before coffee! Pour the coffee then combine the milk.")
     | carrying state mug && carrying state coffeepot = (state'', "Poured successfully.")
     | otherwise = (state, "You can not pour right now!")
         where
@@ -493,16 +493,16 @@ help :: Rule
 help state = (state, showCommands)
    where showCommands = "list of commands!!\
       \\n\
-      \\n- SAVE (SaveFile) - save the current game state to a name of your choice\
-      \\n- LOAD (SaveFile) - load the SaveFile game state to where left off\
+      \\n- save (filename) - save the current game state to a name of your choice\
+      \\n- load (filename) - load the SaveFile game state to where left off\
       \\n- go (direction) - go to the room to your (direction) [eg. 'go north']\
       \\n- get (object) - pick up an (object) and put it in your inventory (if that object is in the room)\
       \\n- drop (object) - drop an (object) into the room (if that object is in your inventory)\
-      \\n- pour (liquid) - pour liquid into a mug (if you have both liquid and an empty mug in your inventory)\
+      \\n- pour (coffee) - pour coffee into a mug (if you have both coffee and an empty mug in your inventory)\
       \\n- examine (object) - get information about an object (if it is in your inventory or in the room)\
       \\n- drink (liquid) - drink a mug of liquid (if you have a mug of liquid)\
-      \\n- eat (food) - eat food (only works on eatable objects)\
-      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch]\
+      \\n- eat (food) - eat food (only works on edible objects)\
+      \\n- use (object) - use (object) [for shower, toothbrush, torch, lightswitch, oven]\
       \\n- combine (object) (object) - combine two objects together to get something new\
       \\n- open (door/cupboard) - open the front door or a cupboard\
       \\n- inventory - see inventory\
@@ -517,7 +517,7 @@ checkForObj :: Object -> GameData -> Object
 checkForObj obj state 
    | carrying state obj = findObj (obj_name obj) (inventory state)
    | objectHere obj (getRoomData state) = objectData (obj_name obj) (getRoomData state)
-   | otherwise = Obj "" "" "" -- empty object but check if can get Maybe to work!!
+   | otherwise = Obj "" "" ""
 
 {- Helper function to check whether a given object has valid values for name, longname and description -}
 checkDefined :: Object -> Bool
